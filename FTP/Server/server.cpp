@@ -23,7 +23,7 @@ std::vector<std::string> splitCommand(const std::string& command) {
     return parts;
 }
 
-std::string handleCWDCommand(int controlSocket, const std::string& args) {
+std::string handleCWDCommand(const std::string& args) {
     std::string response;
     if (args.empty()) {
         response = "Missing directory argument.";
@@ -38,12 +38,57 @@ std::string handleCWDCommand(int controlSocket, const std::string& args) {
     return response;
 }
 
-std::string handleCDUPCommand(int socket) {
+std::string handleCDUPCommand() {
     std::string response;
     if (changeToParentDirectory()) {
         response = "Directory changed to " + getCurrentDirectory() + ".";
     } else {
         response = "Failed to change to parent directory.";
+    }
+    return response;
+}
+
+std::string handleMKDCommand(const std::string& args) {
+    std::string response;
+    if (args.empty()) {
+        response = "Missing directory name.";
+    } else {
+        std::string directory = args;
+        if (makeDirectory(directory)) {
+            response = "Directory '" + directory + "' created.";
+        } else {
+            response = "Failed to create directory '" + directory + "'.";
+        }
+    }
+    return response;
+}
+
+std::string handleRMDCommand(const std::string& args) {
+    std::string response;
+    if (args.empty()) {
+        response = "Missing directory name.";
+    } else {
+        std::string directory = args;
+        if (removeDirectory(directory)) {
+            response = "Directory '" + directory + "' removed.";
+        } else {
+            response = "Failed to remove directory '" + directory + "'.";
+        }
+    }
+    return response;
+}
+
+std::string handleDELECommand(const std::string& args) {
+    std::string response;
+    if (args.empty()) {
+        response = "Missing file name.";
+    } else {
+        std::string filename = args;
+        if (deleteFile(filename)) {
+            response = "File '" + filename + "' deleted.";
+        } else {
+            response = "Failed to delete file '" + filename + "'.";
+        }
     }
     return response;
 }
@@ -116,16 +161,23 @@ int main() {
             }
 
             // Print command details to stdout
-            std::cout << "Received command: " << cmd << ", Args: " << args << std::endl;
+            std::cout << "Received command: " << cmd << "\t" << args << std::endl;
 
             if (cmd == "LIST") {
                 response = listEntries();
             } else if (cmd == "CWD") {
-                response = handleCWDCommand(controlClientSocket, args);
+                response = handleCWDCommand(args);
             } else if (cmd == "CDUP") {
-                response = handleCDUPCommand(controlClientSocket);
+                response = handleCDUPCommand();            
+            } else if (cmd == "MKD") {
+                response = handleMKDCommand(args);
+            } else if (cmd == "RMD") {
+                response = handleRMDCommand(args);
+            } else if (cmd == "DELE") {
+                response = handleDELECommand(args);
+            } else if (cmd == "QUIT") {
+                break;
             } else {
-                // Unsupported command
                 response = "Unsupported command.";
             }
         }

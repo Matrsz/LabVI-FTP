@@ -1,5 +1,6 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <iostream>
 #include <cstring>
@@ -47,4 +48,19 @@ bool changeToParentDirectory() {
     }
     std::string parentDir = currentDir.substr(0, lastSlashPos);
     return changeDirectory(parentDir);
+}
+
+bool makeDirectory(const std::string& directory) {
+    int result = mkdir(directory.c_str(), 0755);
+    return (result == 0);
+}
+
+bool removeDirectory(const std::string& directory) {
+    int result = rmdir(directory.c_str());
+    return (result == 0);
+}
+
+bool deleteFile(const std::string& filename) {
+    int result = unlink(filename.c_str());
+    return (result == 0);
 }

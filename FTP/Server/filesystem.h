@@ -11,3 +11,6 @@ std::string listEntries();
 bool changeDirectory(const std::string& directory);
 std::string getCurrentDirectory();
 bool changeToParentDirectory();
+bool makeDirectory(const std::string& directory);
+bool removeDirectory(const std::string& directory);
+bool deleteFile(const std::string& filename);

@@ -107,7 +107,7 @@ int main() {
             std::cout << "Response: " << buffer << std::endl;
 
             // Check for termination command
-            if (command == "quit" || command == "exit") {
+            if (command == "QUIT") {
                 break;
             }
         }
