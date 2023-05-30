@@ -64,3 +64,8 @@ bool deleteFile(const std::string& filename) {
     int result = unlink(filename.c_str());
     return (result == 0);
 }
+
+bool fileExists(const std::string& filename) {
+    struct stat buffer;
+    return (stat(filename.c_str(), &buffer) == 0);
+}

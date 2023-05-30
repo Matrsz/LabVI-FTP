@@ -6,6 +6,7 @@
 #include <sstream>
 #include <vector>
 #include <dirent.h>
+#include <fstream>
 #include "connections.h"
 #include "filesystem.h"
 
@@ -78,6 +79,7 @@ std::string handleRMDCommand(const std::string& args) {
     return response;
 }
 
+
 std::string handleDELECommand(const std::string& args) {
     std::string response;
     if (args.empty()) {
@@ -92,6 +94,39 @@ std::string handleDELECommand(const std::string& args) {
     }
     return response;
 }
+
+std::string handleRETRCommand(int dataSocket, const std::string& args) {
+    std::string response;
+    if (args.empty()) {
+        response = "Missing filename argument.";
+    } else {
+        std::string filename = args;
+        if (fileExists(filename)) {
+            std::ifstream file(filename, std::ios::binary | std::ios::ate);
+            if (file.is_open()) {
+                std::streamsize fileSize = file.tellg();
+                file.seekg(0, std::ios::beg);
+
+                char* buffer = new char[fileSize];
+                if (file.read(buffer, fileSize)) {
+                    send(dataSocket, buffer, fileSize, 0);
+                    response = "226 File transfer complete.";
+                } else {
+                    response = "Failed to read file.";
+                }
+
+                delete[] buffer;
+                file.close();
+            } else {
+                response = "Failed to open file.";
+            }
+        } else {
+            response = "File '" + filename + "' does not exist.";
+        }
+    }
+    return response;
+}
+
 
 int main() {
     // Create a socket for the control connection
@@ -175,6 +210,8 @@ int main() {
                 response = handleRMDCommand(args);
             } else if (cmd == "DELE") {
                 response = handleDELECommand(args);
+            } else if (cmd == "RETR") {
+                response = handleRETRCommand(dataClientSocket, args);
             } else if (cmd == "QUIT") {
                 break;
             } else {
