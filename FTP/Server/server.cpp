@@ -3,6 +3,8 @@
 #include <unistd.h>
 #include <iostream>
 #include <cstring>
+#include <sstream>
+#include <vector>
 #include <dirent.h>
 
 int createSocket(int port) {
@@ -57,20 +59,82 @@ void sendResponse(int socket, const std::string& response) {
     send(socket, response.c_str(), response.size(), 0);
 }
 
-std::string listFiles() {
-    std::string filelist;
-    DIR *dir;
-    struct dirent *ent;
+std::string listEntries() {
+    std::string entryList;
+    DIR* dir;
+    struct dirent* ent;
     if ((dir = opendir(".")) != NULL) {
         while ((ent = readdir(dir)) != NULL) {
-            if (ent->d_type == DT_REG) {
-                filelist += ent->d_name;
-                filelist += "\r\n";
-            }
+            std::string entryName = ent->d_name;
+            entryList += entryName + "\r\n";
         }
         closedir(dir);
+    } else {
+        entryList = "Failed to read directory.";
     }
-    return filelist;
+    return entryList;
+}
+
+bool changeDirectory(const std::string& directory) {
+    if (chdir(directory.c_str()) == -1) {
+        return false;
+    }
+    return true;
+}
+
+std::string getCurrentDirectory() {
+    char currentDir[PATH_MAX];
+    if (getcwd(currentDir, sizeof(currentDir)) != NULL) {
+        return currentDir;
+    }
+    return "Failed to get current directory.";
+}
+
+std::vector<std::string> splitCommand(const std::string& command) {
+    std::vector<std::string> parts;
+    std::istringstream iss(command);
+    std::string part;
+    while (iss >> part) {
+        parts.push_back(part);
+    }
+    return parts;
+}
+
+std::string handleCWDCommand(int controlSocket, const std::string& args) {
+    std::string response;
+    if (args.empty()) {
+        response = "Missing directory argument.";
+    } else {
+        std::string directory = args;
+        if (changeDirectory(directory)) {
+            response = "Directory changed to " + getCurrentDirectory() + ".";
+        } else {
+            response = "Failed to change directory.";
+        }
+    }
+    return response;
+}
+
+bool changeToParentDirectory() {
+    std::string currentDir = getCurrentDirectory();
+    size_t lastSlashPos = currentDir.find_last_of('/');
+    if (lastSlashPos == std::string::npos) {
+        std::cerr << "Failed to determine parent directory." << std::endl;
+        return false;
+    }
+    std::string parentDir = currentDir.substr(0, lastSlashPos);
+    return changeDirectory(parentDir);
+}
+
+
+std::string handleCDUPCommand(int socket) {
+    std::string response;
+    if (changeToParentDirectory()) {
+        response = "Directory changed to " + getCurrentDirectory() + ".";
+    } else {
+        response = "Failed to change to parent directory.";
+    }
+    return response;
 }
 
 int main() {
@@ -121,7 +185,7 @@ int main() {
         ssize_t bytesRead = recv(controlClientSocket, commandBuffer, sizeof(commandBuffer), 0);
         if (bytesRead <= 0) {
             // Error or connection closed
-            std::cout << "Connection closed." << std::endl;
+            std::cout << "Got 0 bytes";
             break;
         }
 
@@ -129,12 +193,30 @@ int main() {
         std::string command(commandBuffer);
         std::string response;
 
-        // LIST command
-        if (command.substr(0, 4) == "LIST") {
-            response = listFiles();
+        // Split command into command proper and arguments
+        std::vector<std::string> commandParts = splitCommand(command);
+        if (commandParts.empty()) {
+            response = "Invalid command.";
         } else {
-            // Unknown command
-            response = "Unknown command: " + command + "\r\n";
+            std::string cmd = commandParts[0];
+            std::string args;
+            if (commandParts.size() > 1) {
+                args = command.substr(cmd.length() + 1);
+            }
+
+            // Print command details to stdout
+            std::cout << "Received command: " << cmd << ", Args: " << args << std::endl;
+
+            if (cmd == "LIST") {
+                response = listEntries();
+            } else if (cmd == "CWD") {
+                response = handleCWDCommand(controlClientSocket, args);
+            } else if (cmd == "CDUP") {
+                response = handleCDUPCommand(controlClientSocket);
+            } else {
+                // Unsupported command
+                response = "Unsupported command.";
+            }
         }
 
         // Send response back to the client
