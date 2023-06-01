@@ -58,55 +58,50 @@ bool sendFile(int socket, const std::string& filename) {
     return true;
 }
 
-bool recvFile(int socket, const std::string& filename) {
-    std::ofstream file(filename, std::ios::binary);
-    if (!file) {
-        std::cerr << "Failed to create file: " << filename << std::endl;
-        return false;
-    }
-
-    // Receive the file size from the client
+bool recvFile(int dataSocket, const std::string& filename) {
+        // Receive the file size from the server
     char fileSizeBuffer[1024];
     memset(fileSizeBuffer, 0, sizeof(fileSizeBuffer));
-    ssize_t bytesRead = recv(socket, fileSizeBuffer, sizeof(fileSizeBuffer), 0);
+    ssize_t bytesRead = recv(dataSocket, fileSizeBuffer, sizeof(fileSizeBuffer), 0);
     if (bytesRead <= 0) {
         std::cerr << "Failed to receive file size." << std::endl;
-        file.close();
         return false;
     }
+    std::cout << "File size received: " << fileSizeBuffer << " bytes" << std::endl;
 
     std::string fileSizeStr(fileSizeBuffer, bytesRead);
     std::streamsize fileSize = std::stoi(fileSizeStr);
 
-    std::cout << "File size received: " << fileSize << " bytes" << std::endl;
-
-    // Receive the file contents from the client
+    // Receive the file contents from the server
     std::vector<char> buffer(fileSize);
-    bytesRead = recv(socket, buffer.data(), buffer.size(), 0);
+    bytesRead = recv(dataSocket, buffer.data(), buffer.size(), 0);
     if (bytesRead <= 0) {
         std::cerr << "Failed to receive file contents." << std::endl;
-        file.close();
         return false;
     }
 
     std::cout << "File contents received: " << bytesRead << " bytes" << std::endl;
 
     // Write the file contents to disk
+    std::ofstream file(filename, std::ios::binary);
+    if (!file) {
+        std::cerr << "Failed to create file: " << filename << std::endl;
+        return false;
+    }
+
     file.write(buffer.data(), bytesRead);
     file.close();
-
-    std::cout << "File received successfully: " << filename << std::endl;
     return true;
 }
 
-std::string handleRETRCommand(int dataSocket, const std::string& args) {
+void handleRETRCommand(int controlSocket, int dataSocket, const std::string& args) {
     std::string response;
     if (args.empty()) {
         response = "Missing filename argument.";
     } else {
         std::string filename = args;
         if (fileExists(filename)) {
-            std::cout << "File exists: " << filename << std::endl;
+            sendResponse(controlSocket, "150 Opening data connection.\r\n");
             if (sendFile(dataSocket, filename)) {
                 response = "226 File transfer successful.";
             } else {
@@ -116,23 +111,25 @@ std::string handleRETRCommand(int dataSocket, const std::string& args) {
             response = "550 File not found.";
         }
     }
-    return response;
+    sendResponse(controlSocket, response);
+    return;
 }
 
-std::string handleSTORCommand(int dataSocket, const std::string& args) {
+void handleSTORCommand(int controlSocket, int dataSocket, const std::string& args) {
     std::string response;
     if (args.empty()) {
         response = "Missing filename argument.";
     } else {
         std::string filename = args;
-        std::cout << "Receiving file: " << filename << std::endl;
+        sendResponse(controlSocket, "150 Opening data connection.\r\n");
         if (recvFile(dataSocket, filename)) {
             response = "226 File transfer successful.";
         } else {
             response = "451 File transfer failed.";
         }
     }
-    return response;
+    sendResponse(controlSocket, response);
+    return;
 }
 
 int main() {
@@ -218,9 +215,9 @@ int main() {
             } else if (cmd == "DELE") {
                 handleDELECommand(controlClientSocket, args);
             } else if (cmd == "RETR") {
-                handleRETRCommand(dataClientSocket, args);
+                handleRETRCommand(controlClientSocket, dataClientSocket, args);
             } else if (cmd == "STOR") {
-                handleSTORCommand(dataClientSocket, args);
+                handleSTORCommand(controlClientSocket, dataClientSocket, args);
             } else if (cmd == "QUIT") {
                 break;
             } else {

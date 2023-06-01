@@ -8,6 +8,7 @@
 #include <dirent.h>
 
 void sendResponse(int socket, const std::string& response) {
+    std::cout << "Sending Response: " << response << std::endl;
     send(socket, response.c_str(), response.size(), 0);
 }
 
