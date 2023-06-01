@@ -5,6 +5,7 @@
 #include <cstring>
 #include <arpa/inet.h>
 #include <fstream>
+#include <vector>
 
 int createControlSocket(const std::string& serverIP, int serverPort) {
     // Create a socket for the control connection
@@ -61,27 +62,74 @@ int createDataSocket(const std::string& dataIP, int dataPort) {
     return dataSocket;
 }
 
-void receiveFile(int socket, const std::string& filename) {
-    std::ofstream file(filename, std::ios::binary);
-    if (!file.is_open()) {
-        std::cerr << "Failed to create file: " << filename << std::endl;
+void sendFile(int socket, const std::string& filename) {
+    std::ifstream file(filename, std::ios::binary);
+    if (!file) {
+        std::cerr << "Failed to open file: " << filename << std::endl;
         return;
     }
 
-    char buffer[1024];
-    ssize_t bytesRead;
-    while ((bytesRead = recv(socket, buffer, sizeof(buffer), 0)) > 0) {
-        file.write(buffer, bytesRead);
+    // Get the file size
+    file.seekg(0, std::ios::end);
+    std::streamsize fileSize = file.tellg();
+    file.seekg(0, std::ios::beg);
+
+    // Read the file contents into a buffer
+    std::vector<char> buffer(fileSize);
+    if (!file.read(buffer.data(), fileSize)) {
+        std::cerr << "Failed to read file: " << filename << std::endl;
+        file.close();
+        return;
     }
 
     file.close();
 
-    if (bytesRead == -1) {
-        std::cerr << "Error occurred while receiving file: " << filename << std::endl;
-        std::remove(filename.c_str());
-    } else {
-        std::cout << "File received successfully: " << filename << std::endl;
+    // Send the file size to the server
+    std::string fileSizeStr = std::to_string(fileSize);
+
+    // Send the file contents to the server
+    ssize_t bytesSent = send(socket, buffer.data(), buffer.size(), 0);
+    if (bytesSent == -1) {
+        std::cerr << "Failed to send file contents." << std::endl;
+        return;
     }
+
+    std::cout << "File sent successfully: " << filename << std::endl;
+    return;
+}
+
+void receiveFile(int socket, const std::string& filename) {
+    // Receive the file size from the server
+    char fileSizeBuffer[1024];
+    memset(fileSizeBuffer, 0, sizeof(fileSizeBuffer));
+    ssize_t bytesRead = recv(socket, fileSizeBuffer, sizeof(fileSizeBuffer), 0);
+    if (bytesRead <= 0) {
+        std::cerr << "Failed to receive file size." << std::endl;
+        return;
+    }
+
+    std::string fileSizeStr(fileSizeBuffer, bytesRead);
+    std::streamsize fileSize = std::stoi(fileSizeStr);
+
+    // Receive the file contents from the server
+    std::vector<char> buffer(fileSize);
+    bytesRead = recv(socket, buffer.data(), buffer.size(), 0);
+    if (bytesRead <= 0) {
+        std::cerr << "Failed to receive file contents." << std::endl;
+        return;
+    }
+
+    // Write the file contents to disk
+    std::ofstream file(filename, std::ios::binary);
+    if (!file) {
+        std::cerr << "Failed to create file: " << filename << std::endl;
+        return;
+    }
+    file.write(buffer.data(), bytesRead);
+    file.close();
+
+    std::cout << "File received successfully: " << filename << std::endl;
+    return;
 }
 
 int main() {
@@ -137,17 +185,7 @@ int main() {
 
             // Send command to the server
             send(controlSocket, command.c_str(), command.size(), 0);
-
-            // Receive response from the server
-            memset(buffer, 0, sizeof(buffer));
-            ssize_t bytesRead = recv(controlSocket, buffer, sizeof(buffer), 0);
-            if (bytesRead <= 0) {
-                // Error or connection closed
-                break;
-            }
-
-            // Display the response
-            std::cout << "Response: " << buffer << std::endl;
+            std::cout << "Sent Command: " << command << std::endl;
 
             // Check for termination command
             if (command == "QUIT") {
@@ -155,9 +193,23 @@ int main() {
             } else if (command.substr(0, 4) == "RETR") {
                 // Extract the filename from the command
                 std::string filename = command.substr(5);
-
+                std::cout << "Will receive file: " << filename << std::endl;
                 receiveFile(dataSocket, filename);
+            } else if (command.substr(0, 4) == "STOR") {
+                // Extract the filename from the command
+                std::string filename = command.substr(5);
+                std::cout << "Will receive file: " << filename << std::endl;
+                sendFile(dataSocket, filename);
             }
+            // Receive response from the server
+            memset(buffer, 0, sizeof(buffer));
+            ssize_t bytesRead = recv(controlSocket, buffer, sizeof(buffer), 0);
+            if (bytesRead <= 0) {
+                // Error or connection closed
+                break;
+            }
+            // Display the response
+            std::cout << "Response: " << buffer << std::endl;
         }
 
         // Close the data socket

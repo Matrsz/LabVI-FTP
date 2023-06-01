@@ -9,90 +9,94 @@
 #include <fstream>
 #include "connections.h"
 #include "filesystem.h"
+#include "commands.h"
 
-void sendResponse(int socket, const std::string& response) {
-    send(socket, response.c_str(), response.size(), 0);
+
+bool sendFile(int socket, const std::string& filename) {
+    std::ifstream file(filename, std::ios::binary);
+    if (!file) {
+        std::cerr << "Failed to open file: " << filename << std::endl;
+        return false;
+    }
+
+    // Get the file size
+    file.seekg(0, std::ios::end);
+    std::streamsize fileSize = file.tellg();
+    file.seekg(0, std::ios::beg);
+
+    // Read the file contents into a buffer
+    std::vector<char> buffer(fileSize);
+    if (!file.read(buffer.data(), fileSize)) {
+        std::cerr << "Failed to read file: " << filename << std::endl;
+        file.close();
+        return false;
+    }
+
+    file.close();
+
+    std::cout << "File opened: " << filename << std::endl;
+    std::cout << "File size: " << fileSize << " bytes" << std::endl;
+
+    // Send the file size to the client
+    std::string fileSizeStr = std::to_string(fileSize);
+    ssize_t bytesSent = send(socket, fileSizeStr.c_str(), fileSizeStr.size(), 0);
+    if (bytesSent == -1) {
+        std::cerr << "Failed to send file size." << std::endl;
+        return false;
+    }
+    std::cout << "File size sent: " << bytesSent << " bytes" << std::endl;
+
+    // Send the file contents to the client
+    bytesSent = send(socket, buffer.data(), buffer.size(), 0);
+    if (bytesSent == -1) {
+        std::cerr << "Failed to send file contents." << std::endl;
+        return false;
+    }
+    std::cout << "File contents sent: " << bytesSent << " bytes" << std::endl;
+
+    std::cout << "File sent successfully: " << filename << std::endl;
+    return true;
 }
 
-std::vector<std::string> splitCommand(const std::string& command) {
-    std::vector<std::string> parts;
-    std::istringstream iss(command);
-    std::string part;
-    while (iss >> part) {
-        parts.push_back(part);
+bool recvFile(int socket, const std::string& filename) {
+    std::ofstream file(filename, std::ios::binary);
+    if (!file) {
+        std::cerr << "Failed to create file: " << filename << std::endl;
+        return false;
     }
-    return parts;
-}
 
-std::string handleCWDCommand(const std::string& args) {
-    std::string response;
-    if (args.empty()) {
-        response = "Missing directory argument.";
-    } else {
-        std::string directory = args;
-        if (changeDirectory(directory)) {
-            response = "Directory changed to " + getCurrentDirectory() + ".";
-        } else {
-            response = "Failed to change directory.";
-        }
+    // Receive the file size from the client
+    char fileSizeBuffer[1024];
+    memset(fileSizeBuffer, 0, sizeof(fileSizeBuffer));
+    ssize_t bytesRead = recv(socket, fileSizeBuffer, sizeof(fileSizeBuffer), 0);
+    if (bytesRead <= 0) {
+        std::cerr << "Failed to receive file size." << std::endl;
+        file.close();
+        return false;
     }
-    return response;
-}
 
-std::string handleCDUPCommand() {
-    std::string response;
-    if (changeToParentDirectory()) {
-        response = "Directory changed to " + getCurrentDirectory() + ".";
-    } else {
-        response = "Failed to change to parent directory.";
+    std::string fileSizeStr(fileSizeBuffer, bytesRead);
+    std::streamsize fileSize = std::stoi(fileSizeStr);
+
+    std::cout << "File size received: " << fileSize << " bytes" << std::endl;
+
+    // Receive the file contents from the client
+    std::vector<char> buffer(fileSize);
+    bytesRead = recv(socket, buffer.data(), buffer.size(), 0);
+    if (bytesRead <= 0) {
+        std::cerr << "Failed to receive file contents." << std::endl;
+        file.close();
+        return false;
     }
-    return response;
-}
 
-std::string handleMKDCommand(const std::string& args) {
-    std::string response;
-    if (args.empty()) {
-        response = "Missing directory name.";
-    } else {
-        std::string directory = args;
-        if (makeDirectory(directory)) {
-            response = "Directory '" + directory + "' created.";
-        } else {
-            response = "Failed to create directory '" + directory + "'.";
-        }
-    }
-    return response;
-}
+    std::cout << "File contents received: " << bytesRead << " bytes" << std::endl;
 
-std::string handleRMDCommand(const std::string& args) {
-    std::string response;
-    if (args.empty()) {
-        response = "Missing directory name.";
-    } else {
-        std::string directory = args;
-        if (removeDirectory(directory)) {
-            response = "Directory '" + directory + "' removed.";
-        } else {
-            response = "Failed to remove directory '" + directory + "'.";
-        }
-    }
-    return response;
-}
+    // Write the file contents to disk
+    file.write(buffer.data(), bytesRead);
+    file.close();
 
-
-std::string handleDELECommand(const std::string& args) {
-    std::string response;
-    if (args.empty()) {
-        response = "Missing file name.";
-    } else {
-        std::string filename = args;
-        if (deleteFile(filename)) {
-            response = "File '" + filename + "' deleted.";
-        } else {
-            response = "Failed to delete file '" + filename + "'.";
-        }
-    }
-    return response;
+    std::cout << "File received successfully: " << filename << std::endl;
+    return true;
 }
 
 std::string handleRETRCommand(int dataSocket, const std::string& args) {
@@ -102,31 +106,34 @@ std::string handleRETRCommand(int dataSocket, const std::string& args) {
     } else {
         std::string filename = args;
         if (fileExists(filename)) {
-            std::ifstream file(filename, std::ios::binary | std::ios::ate);
-            if (file.is_open()) {
-                std::streamsize fileSize = file.tellg();
-                file.seekg(0, std::ios::beg);
-
-                char* buffer = new char[fileSize];
-                if (file.read(buffer, fileSize)) {
-                    send(dataSocket, buffer, fileSize, 0);
-                    response = "226 File transfer complete.";
-                } else {
-                    response = "Failed to read file.";
-                }
-
-                delete[] buffer;
-                file.close();
+            std::cout << "File exists: " << filename << std::endl;
+            if (sendFile(dataSocket, filename)) {
+                response = "226 File transfer successful.";
             } else {
-                response = "Failed to open file.";
+                response = "451 File transfer failed.";
             }
         } else {
-            response = "File '" + filename + "' does not exist.";
+            response = "550 File not found.";
         }
     }
     return response;
 }
 
+std::string handleSTORCommand(int dataSocket, const std::string& args) {
+    std::string response;
+    if (args.empty()) {
+        response = "Missing filename argument.";
+    } else {
+        std::string filename = args;
+        std::cout << "Receiving file: " << filename << std::endl;
+        if (recvFile(dataSocket, filename)) {
+            response = "226 File transfer successful.";
+        } else {
+            response = "451 File transfer failed.";
+        }
+    }
+    return response;
+}
 
 int main() {
     // Create a socket for the control connection
@@ -199,28 +206,27 @@ int main() {
             std::cout << "Received command: " << cmd << "\t" << args << std::endl;
 
             if (cmd == "LIST") {
-                response = listEntries();
+                sendResponse(controlClientSocket, listEntries());
             } else if (cmd == "CWD") {
-                response = handleCWDCommand(args);
+                handleCWDCommand(controlClientSocket, args);
             } else if (cmd == "CDUP") {
-                response = handleCDUPCommand();            
+                handleCDUPCommand(controlClientSocket);            
             } else if (cmd == "MKD") {
-                response = handleMKDCommand(args);
+                handleMKDCommand(controlClientSocket, args);
             } else if (cmd == "RMD") {
-                response = handleRMDCommand(args);
+                handleRMDCommand(controlClientSocket, args);
             } else if (cmd == "DELE") {
-                response = handleDELECommand(args);
+                handleDELECommand(controlClientSocket, args);
             } else if (cmd == "RETR") {
-                response = handleRETRCommand(dataClientSocket, args);
+                handleRETRCommand(dataClientSocket, args);
+            } else if (cmd == "STOR") {
+                handleSTORCommand(dataClientSocket, args);
             } else if (cmd == "QUIT") {
                 break;
             } else {
-                response = "Unsupported command.";
+                sendResponse(controlClientSocket, "Unsupported command.");
             }
         }
-
-        // Send response back to the client
-        sendResponse(controlClientSocket, response);
     }
 
     // Close the control client socket and control socket

@@ -22,6 +22,20 @@
 - RETR: descarga un archivo al cliente
 - STOR: escribe un archivo del cliente al servidor
 
+## Procedimiento de RETR
+
+1. Client -> solicitud RECV -> Server
+2. Server -> respuesta 150 -> Client
+3. Server -> data -> Client
+4. Server -> respuesta 250 -> Client
+
+## Procedimiento de STOR
+
+1. Client -> solicitud STOR -> Server
+2. Server -> respuesta 150 -> Client
+3. Client -> data -> Server
+4. Server -> respuesta 266 -> Client
+
 ## Servidor
 
 - Necesita información de conexión, mínimamente

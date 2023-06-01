@@ -7,6 +7,10 @@
 #include <vector>
 #include <dirent.h>
 
+void sendResponse(int socket, const std::string& response) {
+    send(socket, response.c_str(), response.size(), 0);
+}
+
 int createSocket(int port) {
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1) {
