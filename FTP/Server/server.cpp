@@ -94,62 +94,61 @@ bool recvFile(int dataSocket, const std::string& filename) {
     return true;
 }
 
-void handleRETRCommand(int controlSocket, int dataSocket, const std::string& args) {
+void handleRETRCommand(int controlClientSocket, const std::string& args) {
     std::string response;
     if (args.empty()) {
         response = "Missing filename argument.";
     } else {
         std::string filename = args;
         if (fileExists(filename)) {
-            sendResponse(controlSocket, "150 Opening data connection.\r\n");
-            if (sendFile(dataSocket, filename)) {
+            sendResponse(controlClientSocket, "150 Opening data connection.\r\n");
+
+            std::string dataAddress = "127.0.0.1";  // Replace with the actual server IP address   
+            int dataPort = 2022;  // Replace with the actual data port
+            int dataSocket = createSocket(dataPort);
+            int dataClientSocket = establishDataConnection(controlClientSocket, dataSocket, dataAddress, dataPort);
+
+            if (sendFile(dataClientSocket, filename)) {
                 response = "226 File transfer successful.";
             } else {
                 response = "451 File transfer failed.";
             }
+
+        std::cout << "Closing Data Sockets" << std::endl;
+            close(dataClientSocket);
+            close(dataSocket);
         } else {
             response = "550 File not found.";
         }
     }
-    sendResponse(controlSocket, response);
+    sendResponse(controlClientSocket, response);
     return;
 }
 
-void handleSTORCommand(int controlSocket, int dataSocket, const std::string& args) {
+void handleSTORCommand(int controlClientSocket, const std::string& args) {
     std::string response;
     if (args.empty()) {
         response = "Missing filename argument.";
     } else {
         std::string filename = args;
-        sendResponse(controlSocket, "150 Opening data connection.\r\n");
+        sendResponse(controlClientSocket, "150 Opening data connection.\r\n");
+
+        std::string dataAddress = "127.0.0.1";  // Replace with the actual server IP address   
+        int dataPort = 2022;  // Replace with the actual data port
+        int dataSocket = createSocket(dataPort);
+        int dataClientSocket = establishDataConnection(controlClientSocket, dataSocket, dataAddress, dataPort);
+
         if (recvFile(dataSocket, filename)) {
             response = "226 File transfer successful.";
         } else {
             response = "451 File transfer failed.";
         }
+        std::cout << "Closing Data Sockets" << std::endl;
+        close(dataClientSocket);
+        close(dataSocket);
     }
-    sendResponse(controlSocket, response);
+    sendResponse(controlClientSocket, response);
     return;
-}
-
-int establishDataConnection(int controlClientSocket, int dataSocket, std::string &dataAddress, int dataPort){
-    std::string dataMessage = "PORT " + dataAddress + "," + std::to_string(dataPort) + "\r\n";
-    send(controlClientSocket, dataMessage.c_str(), dataMessage.size(), 0);
-
-    if (dataSocket == -1) {
-        return 1;
-    }
-
-    std::cout << "Server is listening on port " << dataPort << " for data connections..." << std::endl;
-
-    // Accept a data connection
-    int dataClientSocket = acceptClientConnection(dataSocket);
-    if (dataClientSocket == -1) {
-        return 1;
-    }
-
-    std::cout << "Data connection established." << std::endl;
-    return dataClientSocket;
 }
 
 int main() {
@@ -170,12 +169,9 @@ int main() {
     std::cout << "Client connected." << std::endl;
 
     // Send welcome message to the client
-    std::string dataAddress = "127.0.0.1";  // Replace with the actual server IP address   
-    int dataPort = 2022;  // Replace with the actual data port
-    sendWelcomeMessage(controlClientSocket);
-    int dataSocket = createSocket(dataPort);
 
-    int dataClientSocket = establishDataConnection(controlClientSocket, dataSocket, dataAddress, dataPort);
+    sendWelcomeMessage(controlClientSocket);
+
     // Data connection is now ready for data transfer or other operations
 
     // Enter command loop
@@ -221,9 +217,9 @@ int main() {
             } else if (cmd == "DELE") {
                 handleDELECommand(controlClientSocket, args);
             } else if (cmd == "RETR") {
-                handleRETRCommand(controlClientSocket, dataClientSocket, args);
+                handleRETRCommand(controlClientSocket, args);
             } else if (cmd == "STOR") {
-                handleSTORCommand(controlClientSocket, dataClientSocket, args);
+                handleSTORCommand(controlClientSocket, args);
             } else if (cmd == "QUIT") {
                 break;
             } else {
@@ -235,10 +231,6 @@ int main() {
     // Close the control client socket and control socket
     close(controlClientSocket);
     close(controlSocket);
-
-    // Close the data client socket and data socket
-    close(dataClientSocket);
-    close(dataSocket);
 
     return 0;
 }

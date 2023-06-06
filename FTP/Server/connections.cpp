@@ -58,13 +58,12 @@ void sendWelcomeMessage(int controlClientSocket) {
 
 }
 
-int establishDataConnection(int controlClientSocket, std::string &dataAddress, int dataPort){
+int establishDataConnection(int controlClientSocket, int dataSocket, std::string &dataAddress, int dataPort){
     std::string dataMessage = "PORT " + dataAddress + "," + std::to_string(dataPort) + "\r\n";
     send(controlClientSocket, dataMessage.c_str(), dataMessage.size(), 0);
 
-    // Create a socket for the data connection
-    int dataSocket = createSocket(dataPort);
     if (dataSocket == -1) {
+        std::cout << "Invalid Server Socket" << std::endl;
         return 1;
     }
 
@@ -73,6 +72,7 @@ int establishDataConnection(int controlClientSocket, std::string &dataAddress, i
     // Accept a data connection
     int dataClientSocket = acceptClientConnection(dataSocket);
     if (dataClientSocket == -1) {
+        std::cout << "Invalid Client Socket" << std::endl;
         return 1;
     }
 
