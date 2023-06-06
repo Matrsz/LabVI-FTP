@@ -6,9 +6,19 @@
 #include <arpa/inet.h>
 #include <fstream>
 #include <vector>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <sstream>
+
+bool fileExists(const std::string& filename) {
+    struct stat buffer;
+    return (stat(filename.c_str(), &buffer) == 0);
+}
 
 void sendCommand(int socket, const std::string& command) {
     send(socket, command.c_str(), command.size(), 0);
+    std::cout << "Sent Command: " << command << std::endl;
     return;
 }
 
@@ -77,8 +87,10 @@ void sendFile(int controlSocket, int dataSocket, const std::string& filename) {
         return;
     }
 
+    receiveResponse(controlSocket, response);
     return;
 }
+
 
 void receiveFile(int controlSocket, int dataSocket, const std::string& filename) {
     // Wait for the server's response
@@ -126,6 +138,7 @@ void receiveFile(int controlSocket, int dataSocket, const std::string& filename)
     file.write(buffer.data(), bytesRead);
     file.close();
 
+            receiveResponse(controlSocket, response);
     return;
 }
 
@@ -235,26 +248,28 @@ int main() {
             std::cout << "Enter a command: ";
             std::getline(std::cin, command);
 
-            // Send command to the server
-            send(controlSocket, command.c_str(), command.size(), 0);
-            std::cout << "Sent Command: " << command << std::endl;
-
             // Check for termination command
             if (command == "QUIT") {
+                sendCommand(controlSocket, command);
                 break;
             } else if (command.substr(0, 4) == "RETR") {
                 // Extract the filename from the command
+                sendCommand(controlSocket, command);
                 std::string filename = command.substr(5);
                 std::cout << "Will receive file: " << filename << std::endl;
                 receiveFile(controlSocket, dataSocket, filename);
             } else if (command.substr(0, 4) == "STOR") {
                 // Extract the filename from the command
                 std::string filename = command.substr(5);
-                std::cout << "Will send file: " << filename << std::endl;
-                sendFile(controlSocket, dataSocket, filename);
+                if (fileExists(filename)) {
+                    std::cout << "Will send file: " << filename << std::endl;
+                    sendCommand(controlSocket, command);
+                    sendFile(controlSocket, dataSocket, filename);
+                }
+            } else {
+                sendCommand(controlSocket, command);
+                receiveResponse(controlSocket, response);
             }
-            // Receive response from the server
-            receiveResponse(controlSocket, response);
         }
 
         // Close the data socket
