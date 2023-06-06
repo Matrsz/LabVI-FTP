@@ -138,7 +138,7 @@ void receiveFile(int controlSocket, int dataSocket, const std::string& filename)
     file.write(buffer.data(), bytesRead);
     file.close();
 
-            receiveResponse(controlSocket, response);
+    receiveResponse(controlSocket, response);
     return;
 }
 
@@ -197,6 +197,37 @@ int createDataSocket(const std::string& dataIP, int dataPort) {
     return dataSocket;
 }
 
+int establishDataConnection(int controlSocket) {
+    // Receive the server's IP address and port for the data connection
+    char buffer[1024];
+    memset(buffer, 0, sizeof(buffer));
+    recv(controlSocket, buffer, sizeof(buffer), 0);
+    std::cout << "Received: " << buffer;
+
+    // Parse the server's IP address and port
+    std::string response(buffer);
+    size_t pos = response.find("PORT");
+    std::string dataAddress = response.substr(pos + 5);
+    std::string dataIP;
+    int dataPort = 0;
+    
+    // Parse the IP address and port from the response
+    // The format should be "IP1,IP2,IP3,IP4,Port1,Port2"
+    // Extract IP address
+    pos = dataAddress.find_last_of(",");
+    dataIP = dataAddress.substr(0, pos);
+    // Extract port
+    dataPort = std::stoi(dataAddress.substr(pos + 1));
+
+    // Create the data socket and connect to the server's data socket
+    int dataSocket = createDataSocket(dataIP, dataPort);
+    if (dataSocket == -1) {
+        close(controlSocket);
+        return 1;
+    }    
+    return dataSocket;
+}
+
 int main() {
     // Create a socket for the control connection
     std::string serverIP = "127.0.0.1";  // Replace with the actual server IP address
@@ -212,32 +243,9 @@ int main() {
     std::cout << "Received: " << buffer;
 
     // Receive the server's IP address and port for the data connection
-    memset(buffer, 0, sizeof(buffer));
-    recv(controlSocket, buffer, sizeof(buffer), 0);
-    std::cout << "Received: " << buffer;
+    int dataSocket = establishDataConnection(controlSocket);
 
-    // Parse the server's IP address and port
     std::string response(buffer);
-    size_t pos = response.find("PORT");
-    if (pos != std::string::npos) {
-        std::string dataAddress = response.substr(pos + 5);
-        std::string dataIP;
-        int dataPort = 0;
-
-        // Parse the IP address and port from the response
-        // The format should be "IP1,IP2,IP3,IP4,Port1,Port2"
-        // Extract IP address
-        pos = dataAddress.find_last_of(",");
-        dataIP = dataAddress.substr(0, pos);
-        // Extract port
-        dataPort = std::stoi(dataAddress.substr(pos + 1));
-
-        // Create the data socket and connect to the server's data socket
-        int dataSocket = createDataSocket(dataIP, dataPort);
-        if (dataSocket == -1) {
-            close(controlSocket);
-            return 1;
-        }
 
         // Data connection established, you can now proceed with data transfer or other operations
 
@@ -274,7 +282,7 @@ int main() {
 
         // Close the data socket
         close(dataSocket);
-    }
+    
 
     // Close the control socket
     close(controlSocket);

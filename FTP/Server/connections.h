@@ -10,4 +10,4 @@
 void sendResponse(int socket, const std::string& response);
 int createSocket(int port);
 int acceptClientConnection(int socket);
-void sendWelcomeMessage(int socket, const std::string& dataAddress, int dataPort);
+void sendWelcomeMessage(int socket);

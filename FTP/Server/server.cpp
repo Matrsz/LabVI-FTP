@@ -132,6 +132,26 @@ void handleSTORCommand(int controlSocket, int dataSocket, const std::string& arg
     return;
 }
 
+int establishDataConnection(int controlClientSocket, int dataSocket, std::string &dataAddress, int dataPort){
+    std::string dataMessage = "PORT " + dataAddress + "," + std::to_string(dataPort) + "\r\n";
+    send(controlClientSocket, dataMessage.c_str(), dataMessage.size(), 0);
+
+    if (dataSocket == -1) {
+        return 1;
+    }
+
+    std::cout << "Server is listening on port " << dataPort << " for data connections..." << std::endl;
+
+    // Accept a data connection
+    int dataClientSocket = acceptClientConnection(dataSocket);
+    if (dataClientSocket == -1) {
+        return 1;
+    }
+
+    std::cout << "Data connection established." << std::endl;
+    return dataClientSocket;
+}
+
 int main() {
     // Create a socket for the control connection
     int controlSocket = createSocket(2021);
@@ -150,26 +170,12 @@ int main() {
     std::cout << "Client connected." << std::endl;
 
     // Send welcome message to the client
-    std::string dataAddress = "127.0.0.1";  // Replace with the actual server IP address
+    std::string dataAddress = "127.0.0.1";  // Replace with the actual server IP address   
     int dataPort = 2022;  // Replace with the actual data port
-    sendWelcomeMessage(controlClientSocket, dataAddress, dataPort);
-
-    // Create a socket for the data connection
+    sendWelcomeMessage(controlClientSocket);
     int dataSocket = createSocket(dataPort);
-    if (dataSocket == -1) {
-        return 1;
-    }
 
-    std::cout << "Server is listening on port " << dataPort << " for data connections..." << std::endl;
-
-    // Accept a data connection
-    int dataClientSocket = acceptClientConnection(dataSocket);
-    if (dataClientSocket == -1) {
-        return 1;
-    }
-
-    std::cout << "Data connection established." << std::endl;
-
+    int dataClientSocket = establishDataConnection(controlClientSocket, dataSocket, dataAddress, dataPort);
     // Data connection is now ready for data transfer or other operations
 
     // Enter command loop

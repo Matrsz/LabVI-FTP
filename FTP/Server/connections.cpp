@@ -52,10 +52,30 @@ int acceptClientConnection(int socket) {
     return clientSocket;
 }
 
-void sendWelcomeMessage(int socket, const std::string& dataAddress, int dataPort) {
+void sendWelcomeMessage(int controlClientSocket) {
     std::string welcomeMessage = "220 Welcome to the FTP server.\r\n";
-    send(socket, welcomeMessage.c_str(), welcomeMessage.size(), 0);
+    send(controlClientSocket, welcomeMessage.c_str(), welcomeMessage.size(), 0);
 
+}
+
+int establishDataConnection(int controlClientSocket, std::string &dataAddress, int dataPort){
     std::string dataMessage = "PORT " + dataAddress + "," + std::to_string(dataPort) + "\r\n";
-    send(socket, dataMessage.c_str(), dataMessage.size(), 0);
+    send(controlClientSocket, dataMessage.c_str(), dataMessage.size(), 0);
+
+    // Create a socket for the data connection
+    int dataSocket = createSocket(dataPort);
+    if (dataSocket == -1) {
+        return 1;
+    }
+
+    std::cout << "Server is listening on port " << dataPort << " for data connections..." << std::endl;
+
+    // Accept a data connection
+    int dataClientSocket = acceptClientConnection(dataSocket);
+    if (dataClientSocket == -1) {
+        return 1;
+    }
+
+    std::cout << "Data connection established." << std::endl;
+    return dataClientSocket;
 }
