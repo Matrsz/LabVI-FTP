@@ -1,12 +1,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
-#include <iostream>
 #include <cstring>
 #include <sstream>
-#include <vector>
 #include <dirent.h>
-#include <fstream>
 #include "filesystem.h"
 #include "connections.h"
 
@@ -91,6 +88,64 @@ void handleDELECommand(int controlClientSocket, const std::string& args) {
         } else {
             response = "Failed to delete file '" + filename + "'.";
         }
+    }
+    sendResponse(controlClientSocket, response);
+    return;
+}
+
+
+void handleRETRCommand(int controlClientSocket, const std::string& args) {
+    std::string response;
+    if (args.empty()) {
+        response = "Missing filename argument.";
+    } else {
+        std::string filename = args;
+        if (fileExists(filename)) {
+            sendResponse(controlClientSocket, "150 Opening data connection.\r\n");
+
+            std::string dataAddress = "127.0.0.1";  // Replace with the actual server IP address   
+            int dataPort = 2022;  // Replace with the actual data port
+            int dataSocket = createSocket(dataPort);
+            int dataClientSocket = establishDataConnection(controlClientSocket, dataSocket, dataAddress, dataPort);
+
+            if (sendFile(dataClientSocket, filename)) {
+                response = "226 File transfer successful.";
+            } else {
+                response = "451 File transfer failed.";
+            }
+
+        std::cout << "Closing Data Sockets" << std::endl;
+            close(dataClientSocket);
+            close(dataSocket);
+        } else {
+            response = "550 File not found.";
+        }
+    }
+    sendResponse(controlClientSocket, response);
+    return;
+}
+
+void handleSTORCommand(int controlClientSocket, const std::string& args) {
+    std::string response;
+    if (args.empty()) {
+        response = "Missing filename argument.";
+    } else {
+        std::string filename = args;
+        sendResponse(controlClientSocket, "150 Opening data connection.\r\n");
+
+        std::string dataAddress = "127.0.0.1";  // Replace with the actual server IP address   
+        int dataPort = 2022;  // Replace with the actual data port
+        int dataSocket = createSocket(dataPort);
+        int dataClientSocket = establishDataConnection(controlClientSocket, dataSocket, dataAddress, dataPort);
+
+        if (recvFile(dataSocket, filename)) {
+            response = "226 File transfer successful.";
+        } else {
+            response = "451 File transfer failed.";
+        }
+        std::cout << "Closing Data Sockets" << std::endl;
+        close(dataClientSocket);
+        close(dataSocket);
     }
     sendResponse(controlClientSocket, response);
     return;

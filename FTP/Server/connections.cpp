@@ -2,10 +2,6 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <iostream>
-#include <cstring>
-#include <sstream>
-#include <vector>
-#include <dirent.h>
 
 void sendResponse(int socket, const std::string& response) {
     std::cout << "Sending Response: " << response << std::endl;

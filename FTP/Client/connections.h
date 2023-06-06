@@ -4,12 +4,6 @@
 #include <iostream>
 #include <cstring>
 #include <arpa/inet.h>
-#include <fstream>
-#include <vector>
-#include <dirent.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <sstream>
 
 void sendCommand(int socket, const std::string& command);
 bool receiveResponse(int socket, std::string& response);

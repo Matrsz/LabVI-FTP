@@ -3,9 +3,7 @@
 #include <unistd.h>
 #include <iostream>
 #include <cstring>
-#include <sstream>
-#include <vector>
-#include <dirent.h>
+#include <arpa/inet.h>
 
 void sendResponse(int socket, const std::string& response);
 int createSocket(int port);
