@@ -1,0 +1,71 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
+<svg viewBox="0 0 796 467" xmlns="http://www.w3.org/2000/svg" xmlns:inkspace="http://www.inkscape.org/namespaces/inkscape" xmlns:xlink="http://www.w3.org/1999/xlink" width="796px" height="467px">
+  <defs id="defs_block">
+    <filter height="1.504" id="filter_blur" inkspace:collect="always" width="1.1575" x="-0.07875" y="-0.252">
+      <feGaussianBlur id="feGaussianBlur3780" inkspace:collect="always" stdDeviation="4.2" />
+    </filter>
+  </defs>
+  <title>blockdiag</title>
+  <desc>{
+  default_fontsize = 16
+  node_height = 45
+  node_width = 100
+  default_node_color = none
+  activation = none;
+  edge_length = 500;
+  default_note_color = white;
+  Server [label="Server", fontsize=20]
+  Client [label="Client", fontsize=20]
+  Server &lt;- Client [label="LIST"];
+  Server -&gt; Client [label="150: Opening data connection.", leftnote="Open Data
+Channel", rightnote="Open Data
+Channel"]
+  Server --&gt; Client [label="&lt;directory listing&gt;"]
+  Server -&gt; Client [label="226: File transfer successful.", leftnote="Close Data
+Channel", rightnote="Close Data
+Channel"]
+}</desc>
+  <polygon fill="rgb(0,0,0)" points="29,200 131,200 139,208 139,239 29,239 29,200" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" />
+  <polygon fill="rgb(0,0,0)" points="671,200 773,200 781,208 781,239 671,239 671,200" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" />
+  <polygon fill="rgb(0,0,0)" points="27,365 131,365 139,373 139,401 27,401 27,365" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" />
+  <polygon fill="rgb(0,0,0)" points="671,365 775,365 783,373 783,401 671,401 671,365" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" />
+  <path d="M 152 85 L 152 455" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
+  <path d="M 652 85 L 652 455" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
+  <rect fill="none" height="45" stroke="rgb(0,0,0)" width="100" x="102" y="40" />
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="20" font-style="normal" font-weight="normal" text-anchor="middle" textLength="69" x="152.5" y="72">Server</text>
+  <rect fill="none" height="45" stroke="rgb(0,0,0)" width="100" x="602" y="40" />
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="20" font-style="normal" font-weight="normal" text-anchor="middle" textLength="60" x="652.0" y="72">Client</text>
+  <path d="M 160 144 L 644 144" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="168,140 160,144 168,148" stroke="rgb(0,0,0)" />
+  <path d="M 160 213 L 644 213" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="636,209 644,213 636,217" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(255,255,255)" points="26,194 128,194 136,202 136,233 26,233 26,194" stroke="rgb(0,0,0)" />
+  <path d="M 128 194 L 128 202" fill="none" stroke="rgb(0,0,0)" />
+  <path d="M 128 202 L 136 202" fill="none" stroke="rgb(0,0,0)" />
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="16" font-style="normal" font-weight="normal" text-anchor="middle" textLength="86" x="77.0" y="214">Open Data</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="16" font-style="normal" font-weight="normal" text-anchor="middle" textLength="66" x="67.0" y="231">Channel</text>
+  <polygon fill="rgb(255,255,255)" points="668,194 770,194 778,202 778,233 668,233 668,194" stroke="rgb(0,0,0)" />
+  <path d="M 770 194 L 770 202" fill="none" stroke="rgb(0,0,0)" />
+  <path d="M 770 202 L 778 202" fill="none" stroke="rgb(0,0,0)" />
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="16" font-style="normal" font-weight="normal" text-anchor="middle" textLength="86" x="719.0" y="214">Open Data</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="16" font-style="normal" font-weight="normal" text-anchor="middle" textLength="66" x="709.0" y="231">Channel</text>
+  <path d="M 160 295 L 644 295" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="4" />
+  <polygon fill="rgb(0,0,0)" points="636,291 644,295 636,299" stroke="rgb(0,0,0)" />
+  <path d="M 160 377 L 644 377" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="636,373 644,377 636,381" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(255,255,255)" points="24,359 128,359 136,367 136,395 24,395 24,359" stroke="rgb(0,0,0)" />
+  <path d="M 128 359 L 128 367" fill="none" stroke="rgb(0,0,0)" />
+  <path d="M 128 367 L 136 367" fill="none" stroke="rgb(0,0,0)" />
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="16" font-style="normal" font-weight="normal" text-anchor="middle" textLength="88" x="76.0" y="376">Close Data</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="16" font-style="normal" font-weight="normal" text-anchor="middle" textLength="66" x="65.0" y="393">Channel</text>
+  <polygon fill="rgb(255,255,255)" points="668,359 772,359 780,367 780,395 668,395 668,359" stroke="rgb(0,0,0)" />
+  <path d="M 772 359 L 772 367" fill="none" stroke="rgb(0,0,0)" />
+  <path d="M 772 367 L 780 367" fill="none" stroke="rgb(0,0,0)" />
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="16" font-style="normal" font-weight="normal" text-anchor="middle" textLength="88" x="720.0" y="376">Close Data</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="16" font-style="normal" font-weight="normal" text-anchor="middle" textLength="66" x="709.0" y="393">Channel</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="16" font-style="normal" font-weight="normal" text-anchor="middle" textLength="39" x="620.5" y="140">LIST</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="16" font-style="normal" font-weight="normal" text-anchor="middle" textLength="246" x="291.0" y="209">150: Opening data connection.</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="16" font-style="normal" font-weight="normal" text-anchor="middle" textLength="154" x="245.0" y="291">&lt;directory listing&gt;</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="16" font-style="normal" font-weight="normal" text-anchor="middle" textLength="232" x="284.0" y="373">226: File transfer successful.</text>
+</svg>

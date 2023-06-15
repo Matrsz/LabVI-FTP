@@ -54,3 +54,85 @@ Comandos FTP implementados:
 - `STOR <file>`: Transferir archivo de cliente a servidor
 - `DELE <file>`: Eliminar archivo especificado
 - `QUIT`: Cerrar sesión
+
+
+## Comando LIST
+
+```{julia}
+#| echo: false
+#| output: false
+
+Diagram(:seqdiag, """
+{
+  default_fontsize = 16
+  node_height = 45
+  node_width = 100
+  default_node_color = none
+  activation = none;
+  edge_length = 500;
+  default_note_color = white;
+  Server [label="Server", fontsize=20]
+  Client [label="Client", fontsize=20]
+  Server <- Client [label="LIST"];
+  Server -> Client [label="150: Opening data connection.", leftnote="Open Data\nChannel", rightnote="Open Data\nChannel"]
+  Server --> Client [label="<directory listing>"]
+  Server -> Client [label="226: File transfer successful.", leftnote="Close Data\nChannel", rightnote="Close Data\nChannel"]
+}""") |> Fix2(render, "svg") |> Fix1(write, "Images/list.svg")
+```
+
+![](Images/list.svg){fig-align="center"}
+
+## Comando RETR \<file\>
+
+```{julia}
+#| echo: false
+#| output: false
+
+Diagram(:seqdiag, """
+{
+  default_fontsize = 16
+  node_height = 45
+  node_width = 100
+  default_node_color = none
+  activation = none;
+  edge_length = 500;
+  default_note_color = white;
+  Server [label="Server", fontsize=20]
+  Client [label="Client", fontsize=20]
+  Server <- Client [label="RETR <file>"];
+  Server -> Client [label="150: Opening data connection.", leftnote="Open Data\nChannel", rightnote="Open Data\nChannel"]
+  Server --> Client [label="<filesize>"]
+  Server --> Client [label="<file contents>"]
+  Server -> Client [label="226: File transfer successful.", leftnote="Close Data\nChannel", rightnote="Close Data\nChannel"]
+}""") |> Fix2(render, "svg") |> Fix1(write, "Images/retr.svg")
+```
+
+![](Images/retr.svg){fig-align="center"}
+
+## Comando STOR \<file\>
+
+```{julia}
+#| echo: false
+#| output: false
+
+Diagram(:seqdiag, """
+{
+  default_fontsize = 16
+  node_height = 45
+  node_width = 100
+  default_node_color = none
+  activation = none;
+  edge_length = 500;
+  default_note_color = white;
+  Server [label="Server", fontsize=20]
+  Client [label="Client", fontsize=20]
+  Server <- Client [label="STOR <file>"];
+  Server -> Client [label="150: Opening data connection.", leftnote="Open Data\nChannel", rightnote="Open Data\nChannel"]
+  Server <-- Client [label="<filesize>"]
+  Server <-- Client [label="<file contents>"]
+  Server -> Client [label="226: File transfer successful.", leftnote="Close Data\nChannel", rightnote="Close Data\nChannel"]
+}""") |> Fix2(render, "svg") |> Fix1(write, "Images/stor.svg")
+```
+
+![](Images/stor.svg){fig-align="center"}
+
