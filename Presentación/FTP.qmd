@@ -1,0 +1,56 @@
+---
+title: "Protocolo FTP"
+author: "Matías Roqueta"
+format: 
+  beamer:
+    institute: "Ingeniería en Telecomunicaciones, Instituto Balseiro"
+    theme: Hannover
+    colortheme: seahorse
+    fonttheme: structuresmallcapsserif
+    code-overflow: wrap   
+    linestretch: 2
+---
+
+## Objetivo
+
+Diseñar arquitectura Cliente $\leftrightarrow$ Servidor 
+
+```{julia}
+#| echo: false
+#| output: false
+
+using Kroki 
+using Base: Fix1, Fix2
+
+Diagram(:svgbob, """
+ Server                     Client  
++--------+                 +--------+
+|    2021| <-------------> |        |
+|        |  Command        |        |
+|        |                 |        |
+|    2022| <- - - - - - -> |        |
+|        |  Data           |        |
++--------+                 +--------+
+""") |> Fix2(render, "svg") |> Fix1(write, "Images/fig1.svg")
+```
+
+![](Images/fig1.svg){fig-align="center"}
+
+- Puerto `2021`: Command channel, permanece abierto mientras la sesión esté activa
+- Puerto `2022`: Data channel, abierto únicamente en respuesta a comandos que lo requieran
+
+## Cliente $\rightarrow$ Servidor
+
+Comandos FTP implementados:
+
+- `USER`: Autenticación, nombre de usuario
+- `PASS`: Autenticación, contraseña
+- `LIST`: Enlistar contenidos del directorio actual
+- `CWD <dir>`: Navegar al directorio especificado
+- `CDUP`: Navegar a directorio superior
+- `MKD <dir>`: Crear un directorio especificado
+- `RMD <dir>`: Eliminar el directorio especificado
+- `RETR <file>`: Transferir archivo de servidor a cliente
+- `STOR <file>`: Transferir archivo de cliente a servidor
+- `DELE <file>`: Eliminar archivo especificado
+- `QUIT`: Cerrar sesión

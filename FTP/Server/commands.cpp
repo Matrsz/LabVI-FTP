@@ -93,6 +93,32 @@ void handleDELECommand(int controlClientSocket, const std::string& args) {
     return;
 }
 
+void handleLISTCommand(int controlClientSocket, const std::string& args) {
+    std::string response;
+    if (args.empty()) {
+        sendResponse(controlClientSocket, "150 Opening data connection.\r\n");
+   
+        std::string dataAddress = "127.0.0.1";  // Replace with the actual server IP address   
+        int dataPort = 2022;  // Replace with the actual data port
+        int dataSocket = createSocket(dataPort);
+        int dataClientSocket = establishDataConnection(controlClientSocket, dataSocket, dataAddress, dataPort);
+   
+        std::string fileList = listEntries();
+        if (!fileList.empty()) {
+            ssize_t bytesSent = send(dataClientSocket, fileList.c_str(), fileList.size(), 0);
+            if (bytesSent == -1) {
+                response = "426 Connection closed; transfer aborted.";
+            } else {
+                response = "226 Closing data connection, sent " + std::to_string(bytesSent) + " bytes.";
+            }
+        } else {
+            response = "550 Failed to list directory.";
+        }
+        close(dataClientSocket);
+        close(dataSocket);
+    }
+    sendResponse(controlClientSocket, response);
+}
 
 void handleRETRCommand(int controlClientSocket, const std::string& args) {
     std::string response;

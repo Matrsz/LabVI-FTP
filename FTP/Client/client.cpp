@@ -40,6 +40,9 @@ int main() {
                 sendCommand(controlSocket, command);
                 sendFile(controlSocket, filename);
             }
+        } else if (command.substr(0, 4) == "LIST") {
+            sendCommand(controlSocket, command);
+            receiveList(controlSocket);
         } else {
             sendCommand(controlSocket, command);
             receiveResponse(controlSocket, response);

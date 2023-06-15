@@ -130,3 +130,37 @@ void receiveFile(int controlSocket, const std::string& filename) {
     close(dataSocket);
     return;
 }
+
+void receiveList(int controlSocket) {
+    // Wait for the server's response
+    std::string response;
+    if (!receiveResponse(controlSocket, response)) {
+        std::cerr << "Failed to receive response from the server." << std::endl;
+        return;
+    }
+
+    // Check if the server is ready to send the file
+    if (response.substr(0, 3) != "150") {
+        std::cerr << "Server rejected file retrieval: " << response << std::endl;
+        return;
+    }
+    int dataSocket = establishDataConnection(controlSocket);
+
+    // Receive the file list from the data connection
+    char buffer[1024];
+    ssize_t bytesRead;
+    std::string fileList;
+
+    while ((bytesRead = recv(dataSocket, buffer, sizeof(buffer), 0)) > 0) {
+        fileList += std::string(buffer, bytesRead);
+    }
+
+    // Print the received file list
+    std::cout << "File List:\n" << fileList << std::endl;
+
+    receiveResponse(controlSocket, response);
+    
+    std::cout << "Closing Data Socket" << std::endl;
+    close(dataSocket);
+    return;
+}

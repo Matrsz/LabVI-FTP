@@ -106,7 +106,7 @@ int main() {
                 }
             } else {
                 if (cmd == "LIST") {
-                    sendResponse(controlClientSocket, listEntries());
+                    handleLISTCommand(controlClientSocket, args);
                 } else if (cmd == "CWD") {
                     handleCWDCommand(controlClientSocket, args);
                 } else if (cmd == "CDUP") {
