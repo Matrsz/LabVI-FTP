@@ -4,6 +4,27 @@
 #include <iostream>
 #include <cstring>
 #include <arpa/inet.h>
+#include <fcntl.h>
+
+void closeSocket(int socket) {
+    // Set the socket to non-blocking mode
+    int flags = fcntl(socket, F_GETFL, 0);
+    fcntl(socket, F_SETFL, flags | O_NONBLOCK);
+    
+    // Shutdown the socket to disable further send/receive operations
+    shutdown(socket, SHUT_WR);
+    
+    // Read and discard any incoming data from the socket
+    char buffer[1024];
+    while (true) {
+        ssize_t bytesRead = recv(socket, buffer, sizeof(buffer), 0);
+        if (bytesRead <= 0)
+            break;
+    }
+    
+    // Close the socket
+    close(socket);
+}
 
 void sendCommand(int socket, const std::string& command) {
     send(socket, command.c_str(), command.size(), 0);
@@ -42,14 +63,14 @@ int createControlSocket(const std::string& serverIP, int serverPort) {
     serverAddress.sin_addr.s_addr = inet_addr(serverIP.c_str());
     if (serverAddress.sin_addr.s_addr == INADDR_NONE) {
         std::cerr << "Invalid server IP address." << std::endl;
-        close(controlSocket);
+        closeSocket(controlSocket);
         return -1;
     }
 
     // Connect to the server
     if (connect(controlSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) == -1) {
         std::cerr << "Failed to connect to the server." << std::endl;
-        close(controlSocket);
+        closeSocket(controlSocket);
         return -1;
     }
 
@@ -73,7 +94,7 @@ int createDataSocket(const std::string& dataIP, int dataPort) {
     // Connect to the server's data socket
     if (connect(dataSocket, (struct sockaddr*)&dataServerAddress, sizeof(dataServerAddress)) == -1) {
         std::cerr << "Failed to connect to the server's data socket." << std::endl;
-        close(dataSocket);
+        closeSocket(dataSocket);
         return -1;
     }
 
@@ -105,7 +126,7 @@ int establishDataConnection(int controlSocket) {
     // Create the data socket and connect to the server's data socket
     int dataSocket = createDataSocket(dataIP, dataPort);
     if (dataSocket == -1) {
-        close(controlSocket);
+        closeSocket(controlSocket);
         return 1;
     }    
     return dataSocket;

@@ -2,6 +2,27 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <iostream>
+#include <fcntl.h>
+
+void closeSocket(int socket) {
+    // Set the socket to non-blocking mode
+    int flags = fcntl(socket, F_GETFL, 0);
+    fcntl(socket, F_SETFL, flags | O_NONBLOCK);
+    
+    // Shutdown the socket to disable further send/receive operations
+    shutdown(socket, SHUT_WR);
+    
+    // Read and discard any incoming data from the socket
+    char buffer[1024];
+    while (true) {
+        ssize_t bytesRead = recv(socket, buffer, sizeof(buffer), 0);
+        if (bytesRead <= 0)
+            break;
+    }
+    
+    // Close the socket
+    close(socket);
+}
 
 void sendResponse(int socket, const std::string& response) {
     std::cout << "Sending Response: " << response << std::endl;

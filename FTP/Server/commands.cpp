@@ -114,8 +114,8 @@ void handleLISTCommand(int controlClientSocket, const std::string& args) {
         } else {
             response = "550 Failed to list directory.";
         }
-        close(dataClientSocket);
-        close(dataSocket);
+        closeSocket(dataClientSocket);
+        closeSocket(dataSocket);
     }
     sendResponse(controlClientSocket, response);
 }
@@ -141,8 +141,8 @@ void handleRETRCommand(int controlClientSocket, const std::string& args) {
             }
 
         std::cout << "Closing Data Sockets" << std::endl;
-            close(dataClientSocket);
-            close(dataSocket);
+            closeSocket(dataClientSocket);
+            closeSocket(dataSocket);
         } else {
             response = "550 File not found.";
         }
@@ -164,14 +164,14 @@ void handleSTORCommand(int controlClientSocket, const std::string& args) {
         int dataSocket = createSocket(dataPort);
         int dataClientSocket = establishDataConnection(controlClientSocket, dataSocket, dataAddress, dataPort);
 
-        if (recvFile(dataSocket, filename)) {
+        if (recvFile(dataClientSocket, filename)) {
             response = "226 File transfer successful.";
         } else {
             response = "451 File transfer failed.";
         }
         std::cout << "Closing Data Sockets" << std::endl;
-        close(dataClientSocket);
-        close(dataSocket);
+        closeSocket(dataClientSocket);
+        closeSocket(dataSocket);
     }
     sendResponse(controlClientSocket, response);
     return;

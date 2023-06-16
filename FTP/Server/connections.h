@@ -10,3 +10,4 @@ int createSocket(int port);
 int acceptClientConnection(int socket);
 void sendWelcomeMessage(int socket);
 int establishDataConnection(int controlClientSocket, int dataSocket, std::string &dataAddress, int dataPort);
+void closeSocket(int socket);

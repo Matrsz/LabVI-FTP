@@ -48,6 +48,6 @@ int main() {
             receiveResponse(controlSocket, response);
         }
     }
-    close(controlSocket);
+    closeSocket(controlSocket);
     return 0;
 }

@@ -10,3 +10,4 @@ bool receiveResponse(int socket, std::string& response);
 int createControlSocket(const std::string& serverIP, int serverPort);
 int createDataSocket(const std::string& dataIP, int dataPort);
 int establishDataConnection(int controlSocket);
+void closeSocket(int socket);

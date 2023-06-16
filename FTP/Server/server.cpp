@@ -125,8 +125,8 @@ int main() {
     }
 
     // Close the control client socket and control socket
-    close(controlClientSocket);
-    close(controlSocket);
+    closeSocket(controlClientSocket);
+    closeSocket(controlSocket);
 
     return 0;
 }

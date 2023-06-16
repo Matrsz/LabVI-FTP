@@ -51,7 +51,7 @@ void sendFile(int controlSocket, const std::string& filename) {
     if (bytesSent == -1) {
         std::cerr << "Failed to send file size." << std::endl;
         std::cout << "Closing Data Socket" << std::endl;
-        close(dataSocket);
+        closeSocket(dataSocket);
         return;
     }
     std::cout << "File size sent: " << bytesSent << " bytes" << std::endl;
@@ -61,14 +61,14 @@ void sendFile(int controlSocket, const std::string& filename) {
     if (bytesSent == -1) {
         std::cerr << "Failed to send file contents." << std::endl;
         std::cout << "Closing Data Socket" << std::endl;
-        close(dataSocket);
+        closeSocket(dataSocket);
         return;
     }
 
     receiveResponse(controlSocket, response);
 
     std::cout << "Closing Data Socket" << std::endl;
-    close(dataSocket);
+    closeSocket(dataSocket);
     return;
 }
 
@@ -95,7 +95,7 @@ void receiveFile(int controlSocket, const std::string& filename) {
     if (bytesRead <= 0) {
         std::cerr << "Failed to receive file size." << std::endl;
         std::cout << "Closing Data Socket" << std::endl;
-        close(dataSocket);
+        closeSocket(dataSocket);
         return;
     }
     std::cout << "File size received: " << fileSizeBuffer << " bytes" << std::endl;
@@ -109,7 +109,7 @@ void receiveFile(int controlSocket, const std::string& filename) {
     if (bytesRead <= 0) {
         std::cerr << "Failed to receive file contents." << std::endl;
         std::cout << "Closing Data Socket" << std::endl;
-        close(dataSocket);
+        closeSocket(dataSocket);
         return;
     }
 
@@ -127,7 +127,7 @@ void receiveFile(int controlSocket, const std::string& filename) {
     receiveResponse(controlSocket, response);
     
     std::cout << "Closing Data Socket" << std::endl;
-    close(dataSocket);
+    closeSocket(dataSocket);
     return;
 }
 
@@ -161,6 +161,6 @@ void receiveList(int controlSocket) {
     receiveResponse(controlSocket, response);
     
     std::cout << "Closing Data Socket" << std::endl;
-    close(dataSocket);
+    closeSocket(dataSocket);
     return;
 }
