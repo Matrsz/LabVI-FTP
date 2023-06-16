@@ -52,12 +52,7 @@ int main() {
     }
 
     std::cout << "Client connected." << std::endl;
-
-    // Send welcome message to the client
-
     sendWelcomeMessage(controlClientSocket);
-
-    // Data connection is now ready for data transfer or other operations
 
     bool authenticated = false;
     std::string username = "";
@@ -74,7 +69,6 @@ int main() {
             break;
         }
 
-        // Process the command
         std::string command(commandBuffer);
         std::string response;
 

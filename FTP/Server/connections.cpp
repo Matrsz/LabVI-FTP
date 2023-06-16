@@ -15,6 +15,13 @@ int createSocket(int port) {
         return -1;
     }
 
+    int reuseAddr = 1;
+    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &reuseAddr, sizeof(reuseAddr)) == -1) {
+        std::cerr << "Failed to set SO_REUSEADDR option on socket." << std::endl;
+        close(sockfd);
+        return -1;
+    }
+
     sockaddr_in serverAddress{};
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_port = htons(port);
@@ -51,7 +58,6 @@ int acceptClientConnection(int socket) {
 void sendWelcomeMessage(int controlClientSocket) {
     std::string welcomeMessage = "220 Welcome to the FTP server.\r\n";
     send(controlClientSocket, welcomeMessage.c_str(), welcomeMessage.size(), 0);
-
 }
 
 int establishDataConnection(int controlClientSocket, int dataSocket, std::string &dataAddress, int dataPort){

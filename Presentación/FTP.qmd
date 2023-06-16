@@ -41,19 +41,39 @@ Diagram(:svgbob, """
 
 ## Cliente $\rightarrow$ Servidor
 
-Comandos FTP implementados:
+:::: {.columns}
 
-- `USER`: Autenticación, nombre de usuario
-- `PASS`: Autenticación, contraseña
-- `LIST`: Enlistar contenidos del directorio actual
-- `CWD <dir>`: Navegar al directorio especificado
-- `CDUP`: Navegar a directorio superior
-- `MKD <dir>`: Crear un directorio especificado
-- `RMD <dir>`: Eliminar el directorio especificado
-- `RETR <file>`: Transferir archivo de servidor a cliente
-- `STOR <file>`: Transferir archivo de cliente a servidor
-- `DELE <file>`: Eliminar archivo especificado
-- `QUIT`: Cerrar sesión
+::: {.column width="50%"}
+
+Comandos que usan solamente Command channel:
+
+\vspace{1em}
+
+- `USER <user>`
+- `PASS <pass>`
+- `CWD <dir>`
+- `CDUP`
+- `MKD <dir>`
+- `RMD <dir>`
+- `DELE <file>`
+- `QUIT`
+
+:::
+
+::: {.column width="50%"}
+
+Comandos que usan ambos Command y Data channel:
+
+\vspace{1em}
+
+- `LIST`
+- `RETR <file>`
+- `STOR <file>`
+
+
+:::
+
+::::
 
 
 ## Comando LIST
@@ -101,7 +121,7 @@ Diagram(:seqdiag, """
   Client [label="Client", fontsize=20]
   Server <- Client [label="RETR <file>"];
   Server -> Client [label="150: Opening data connection.", leftnote="Open Data\nChannel", rightnote="Open Data\nChannel"]
-  Server --> Client [label="<filesize>"]
+  Server --> Client [label="<filesize>", rightnote="Initialize\nBuffer"]
   Server --> Client [label="<file contents>"]
   Server -> Client [label="226: File transfer successful.", leftnote="Close Data\nChannel", rightnote="Close Data\nChannel"]
 }""") |> Fix2(render, "svg") |> Fix1(write, "Images/retr.svg")
@@ -128,7 +148,7 @@ Diagram(:seqdiag, """
   Client [label="Client", fontsize=20]
   Server <- Client [label="STOR <file>"];
   Server -> Client [label="150: Opening data connection.", leftnote="Open Data\nChannel", rightnote="Open Data\nChannel"]
-  Server <-- Client [label="<filesize>"]
+  Server <-- Client [label="<filesize>", leftnote="Initialize\nBuffer"]
   Server <-- Client [label="<file contents>"]
   Server -> Client [label="226: File transfer successful.", leftnote="Close Data\nChannel", rightnote="Close Data\nChannel"]
 }""") |> Fix2(render, "svg") |> Fix1(write, "Images/stor.svg")
