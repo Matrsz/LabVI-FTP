@@ -76,35 +76,16 @@ bool sendFile(int socket, const std::string& filename) {
         return false;
     }
 
-    // Get the file size
-    file.seekg(0, std::ios::end);
-    std::streamsize fileSize = file.tellg();
-    file.seekg(0, std::ios::beg);
-
     // Read the file contents into a buffer
-    std::vector<char> buffer(fileSize);
-    if (!file.read(buffer.data(), fileSize)) {
-        std::cerr << "Failed to read file: " << filename << std::endl;
-        file.close();
-        return false;
-    }
+    std::vector<char> buffer(std::istreambuf_iterator<char>(file), {});
 
     file.close();
 
     std::cout << "File opened: " << filename << std::endl;
-    std::cout << "File size: " << fileSize << " bytes" << std::endl;
-
-    // Send the file size to the client
-    std::string fileSizeStr = std::to_string(fileSize);
-    ssize_t bytesSent = send(socket, fileSizeStr.c_str(), fileSizeStr.size(), 0);
-    if (bytesSent == -1) {
-        std::cerr << "Failed to send file size." << std::endl;
-        return false;
-    }
-    std::cout << "File size sent: " << bytesSent << " bytes" << std::endl;
+    std::cout << "File size: " << buffer.size() << " bytes" << std::endl;
 
     // Send the file contents to the client
-    bytesSent = send(socket, buffer.data(), buffer.size(), 0);
+    ssize_t bytesSent = send(socket, buffer.data(), buffer.size(), 0);
     if (bytesSent == -1) {
         std::cerr << "Failed to send file contents." << std::endl;
         return false;
@@ -115,38 +96,32 @@ bool sendFile(int socket, const std::string& filename) {
     return true;
 }
 
+
 bool recvFile(int dataSocket, const std::string& filename) {
-        // Receive the file size from the server
-    char fileSizeBuffer[1024];
-    memset(fileSizeBuffer, 0, sizeof(fileSizeBuffer));
-    ssize_t bytesRead = recv(dataSocket, fileSizeBuffer, sizeof(fileSizeBuffer), 0);
-    if (bytesRead <= 0) {
-        std::cerr << "Failed to receive file size." << std::endl;
-        return false;
-    }
-    std::cout << "File size received: " << fileSizeBuffer << " bytes" << std::endl;
+    const int bufferSize = 1024; // Adjust the buffer size as needed
 
-    std::string fileSizeStr(fileSizeBuffer, bytesRead);
-    std::streamsize fileSize = std::stoi(fileSizeStr);
-
-    // Receive the file contents from the server
-    std::vector<char> buffer(fileSize);
-    bytesRead = recv(dataSocket, buffer.data(), buffer.size(), 0);
-    if (bytesRead <= 0) {
-        std::cerr << "Failed to receive file contents." << std::endl;
-        return false;
-    }
-
-    std::cout << "File contents received: " << bytesRead << " bytes" << std::endl;
-
-    // Write the file contents to disk
+    std::vector<char> buffer(bufferSize);
     std::ofstream file(filename, std::ios::binary);
     if (!file) {
         std::cerr << "Failed to create file: " << filename << std::endl;
         return false;
     }
 
-    file.write(buffer.data(), bytesRead);
+    ssize_t bytesRead;
+    while ((bytesRead = recv(dataSocket, buffer.data(), bufferSize, 0)) > 0) {
+        file.write(buffer.data(), bytesRead);
+    }
+
+    if (bytesRead < 0) {
+        std::cerr << "Failed to receive file contents." << std::endl;
+        file.close();
+        std::cout << "Closing Data Socket" << std::endl;
+        return false;
+    }
+
     file.close();
+
+    std::cout << "File received successfully: " << filename << std::endl;
+
     return true;
 }
