@@ -99,8 +99,8 @@ bool sendFile(int socket, const std::string& filename) {
 
 bool recvFile(int dataSocket, const std::string& filename) {
     const int bufferSize = 1024; // Adjust the buffer size as needed
-
     std::vector<char> buffer(bufferSize);
+
     std::ofstream file(filename, std::ios::binary);
     if (!file) {
         std::cerr << "Failed to create file: " << filename << std::endl;
@@ -110,6 +110,7 @@ bool recvFile(int dataSocket, const std::string& filename) {
     ssize_t bytesRead;
     while ((bytesRead = recv(dataSocket, buffer.data(), bufferSize, 0)) > 0) {
         file.write(buffer.data(), bytesRead);
+        std::cout << "Read " << bytesRead << " bytes" << std::endl;
     }
 
     if (bytesRead < 0) {

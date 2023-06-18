@@ -51,11 +51,10 @@ void sendFile(int controlSocket, const std::string& filename) {
 
     std::cout << "File sent successfully: " << filename << std::endl;
 
-    // Wait for the server's response
-    receiveResponse(controlSocket, response);
-
     std::cout << "Closing Data Socket" << std::endl;
     closeSocket(dataSocket);
+    // Wait for the server's response
+    receiveResponse(controlSocket, response);
 }
 
 
