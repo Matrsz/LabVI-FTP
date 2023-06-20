@@ -9,6 +9,9 @@ format:
     fonttheme: structuresmallcapsserif
     code-overflow: wrap   
     linestretch: 2
+    monofont: 'Inconsolata'
+    monofontoptions: 
+    - Scale=0.7
 ---
 
 ## Objetivo
@@ -75,8 +78,8 @@ Comandos que usan ambos Command y Data channel:
 
 ::::
 
+## Loop general
 
-## Comando LIST
 
 ```{julia}
 #| echo: false
@@ -93,14 +96,13 @@ Diagram(:seqdiag, """
   default_note_color = white;
   Server [label="Server", fontsize=20]
   Client [label="Client", fontsize=20]
-  Server <- Client [label="LIST"];
-  Server -> Client [label="150: Opening data connection.", leftnote="Open Data\nChannel", rightnote="Open Data\nChannel"]
-  Server --> Client [label="<directory listing>"]
-  Server -> Client [label="226: File transfer successful.", leftnote="Close Data\nChannel", rightnote="Close Data\nChannel"]
-}""") |> Fix2(render, "svg") |> Fix1(write, "Images/list.svg")
+  Server <- Client [label="request"];
+  === Ejecución de request ===
+  Server -> Client [label="reply"]
+}""") |> Fix2(render, "svg") |> Fix1(write, "Images/general.svg")
 ```
 
-![](Images/list.svg){fig-align="center"}
+![](Images/general.svg){fig-align="center"}
 
 ## Comando RETR \<file\>
 
@@ -121,13 +123,76 @@ Diagram(:seqdiag, """
   Client [label="Client", fontsize=20]
   Server <- Client [label="RETR <file>"];
   Server -> Client [label="150: Opening data connection.", leftnote="Open Data\nChannel", rightnote="Open Data\nChannel"]
-  Server --> Client [label="<filesize>", rightnote="Initialize\nBuffer"]
-  Server --> Client [label="<file contents>"]
-  Server -> Client [label="226: File transfer successful.", leftnote="Close Data\nChannel", rightnote="Close Data\nChannel"]
+  Server --> Client [label="<file>"]
+  Server --> Client [label="0 bytes", leftnote="Close Data\nChannel", rightnote="Close Data\nChannel"]
+  Server -> Client [label="226: File transfer successful."]
 }""") |> Fix2(render, "svg") |> Fix1(write, "Images/retr.svg")
 ```
 
 ![](Images/retr.svg){fig-align="center"}
+
+## Server side
+
+```cpp
+void handleRETRCommand(int controlClientSocket, const std::string& args) {
+    sendResponse(controlClientSocket, "150 Opening data connection.\r\n");
+    int dataSocket = createSocket(dataPort);
+    int dataClientSocket = establishDataConnection(controlClientSocket,
+                           dataSocket, dataAddress, dataPort);
+    if (sendFile(dataClientSocket, filename)) {
+        std::string response = "226 File transfer successful.";
+    } else {
+        std::string response = "451 File transfer failed.";
+    }
+    closeSocket(dataClientSocket);
+    closeSocket(dataSocket);
+    sendResponse(controlClientSocket, response);
+    return;
+}
+```
+
+## Server side
+
+```cpp
+bool sendFile(int socket, const std::string& filename) {
+    std::ifstream file(filename, std::ios::binary);
+    if (!file) {
+        std::cerr << "Failed to open file: " << filename << std::endl;
+        return false;
+    }
+    std::vector<char> buffer(std::istreambuf_iterator<char>(file), {});
+    file.close();
+    ssize_t bytesSent = send(socket, buffer.data(), buffer.size(), 0);
+    if (bytesSent == -1) {
+        std::cerr << "Failed to send file contents." << std::endl;
+        return false;
+    }
+    return true;
+}
+```
+
+## Client side
+
+```cpp
+void receiveFile(int controlSocket, const std::string& filename) {
+    std::string response;
+    receiveResponse(controlSocket, response);
+    if (response.substr(0, 3) != "150") {
+        return;
+    }
+    int dataSocket = establishDataConnection(controlSocket);
+    const int bufferSize = 1024;
+    std::vector<char> buffer(bufferSize);
+    ssize_t bytesRead;
+    while (bytesRead = recv(dataSocket, buffer.data(), bufferSize, 0) > 0) {
+        file.write(buffer.data(), bytesRead);
+    }
+    file.close();
+    receiveResponse(controlSocket, response);
+    closeSocket(dataSocket);
+    return;
+}
+```
 
 ## Comando STOR \<file\>
 
@@ -148,11 +213,83 @@ Diagram(:seqdiag, """
   Client [label="Client", fontsize=20]
   Server <- Client [label="STOR <file>"];
   Server -> Client [label="150: Opening data connection.", leftnote="Open Data\nChannel", rightnote="Open Data\nChannel"]
-  Server <-- Client [label="<filesize>", leftnote="Initialize\nBuffer"]
-  Server <-- Client [label="<file contents>"]
-  Server -> Client [label="226: File transfer successful.", leftnote="Close Data\nChannel", rightnote="Close Data\nChannel"]
+  Server <-- Client [label="<file>"]
+  Server <-- Client [label="0 bytes", leftnote="Close Data\nChannel", rightnote="Close Data\nChannel"]
+  Server -> Client [label="226: File transfer successful."]
 }""") |> Fix2(render, "svg") |> Fix1(write, "Images/stor.svg")
 ```
 
 ![](Images/stor.svg){fig-align="center"}
 
+## Server side
+
+```cpp
+void handleSTORCommand(int controlClientSocket, const std::string& args) {
+    sendResponse(controlClientSocket, "150 Opening data connection.\r\n");
+    int dataSocket = createSocket(dataPort);
+    int dataClientSocket = establishDataConnection(controlClientSocket,
+                           dataSocket, dataAddress, dataPort);
+    if (recvFile(dataClientSocket, filename)) {
+      response = "226 File transfer successful.";
+    } else {
+      response = "451 File transfer failed.";
+    }
+    closeSocket(dataClientSocket);
+    closeSocket(dataSocket);
+    sendResponse(controlClientSocket, response);
+    return;
+}
+```
+
+## Server side
+
+```cpp
+bool recvFile(int dataSocket, const std::string& filename) {
+    const int bufferSize = 1024;
+    std::vector<char> buffer(bufferSize);
+    std::ofstream file(filename, std::ios::binary);
+    ssize_t bytesRead;
+    while (bytesRead = recv(dataSocket, buffer.data(), bufferSize, 0) > 0) {
+        file.write(buffer.data(), bytesRead);
+        std::cout << "Read " << bytesRead << " bytes" << std::endl;
+    }
+    if (bytesRead < 0) {
+        file.close();
+        return false;
+    }
+    file.close();
+    return true;
+}
+```
+
+## Client Side
+
+```cpp
+void sendFile(int controlSocket, const std::string& filename) {
+    std::string response;
+    receiveResponse(controlSocket, response);
+    if (response.substr(0, 3) != "150") {
+        return;
+    }
+    int dataSocket = establishDataConnection(controlSocket);
+    std::ifstream file(filename, std::ios::binary);
+    std::vector<char> buffer(std::istreambuf_iterator<char>(file), {});
+    file.close();
+    ssize_t bytesSent = send(dataSocket, buffer.data(), buffer.size(), 0);
+    closeSocket(dataSocket);
+    receiveResponse(controlSocket, response);
+    return;
+}
+```
+
+## Loop Básico
+
+```cpp
+while(true) {
+    if (authenticated) {
+        // Selección de comandos RETR, STOR, etc..
+    } else {
+        // Selección de comandos USER, PASS, o rechazo
+    }
+}
+```

@@ -20,13 +20,13 @@ std::vector<std::string> splitCommand(const std::string& command) {
 void handleCWDCommand(int controlClientSocket, const std::string& args) {
     std::string response;
     if (args.empty()) {
-        response = "Missing directory argument.";
+        response = "501 Missing directory argument.";
     } else {
         std::string directory = args;
         if (changeDirectory(directory)) {
-            response = "Directory changed to " + getCurrentDirectory() + ".";
+            response = "212 Directory changed to " + getCurrentDirectory() + ".";
         } else {
-            response = "Failed to change directory.";
+            response = "550 Failed to change directory.";
         }
     }
     sendResponse(controlClientSocket, response);
@@ -36,9 +36,9 @@ void handleCWDCommand(int controlClientSocket, const std::string& args) {
 void handleCDUPCommand(int controlClientSocket) {
     std::string response;
     if (changeToParentDirectory()) {
-        response = "Directory changed to " + getCurrentDirectory() + ".";
+        response = "212 Directory changed to " + getCurrentDirectory() + ".";
     } else {
-        response = "Failed to change to parent directory.";
+        response = "550 Failed to change to parent directory.";
     }
     sendResponse(controlClientSocket, response);
     return;
@@ -47,13 +47,13 @@ void handleCDUPCommand(int controlClientSocket) {
 void handleMKDCommand(int controlClientSocket, const std::string& args) {
     std::string response;
     if (args.empty()) {
-        response = "Missing directory name.";
+        response = "501 Missing directory name.";
     } else {
         std::string directory = args;
         if (makeDirectory(directory)) {
-            response = "Directory '" + directory + "' created.";
+            response = "250 Directory '" + directory + "' created.";
         } else {
-            response = "Failed to create directory '" + directory + "'.";
+            response = "450 Failed to create directory '" + directory + "'.";
         }
     }
     sendResponse(controlClientSocket, response);
@@ -63,13 +63,13 @@ void handleMKDCommand(int controlClientSocket, const std::string& args) {
 void handleRMDCommand(int controlClientSocket, const std::string& args) {
     std::string response;
     if (args.empty()) {
-        response = "Missing directory name.";
+        response = "501 Missing directory name.";
     } else {
         std::string directory = args;
         if (removeDirectory(directory)) {
-            response = "Directory '" + directory + "' removed.";
+            response = "250 Directory '" + directory + "' removed.";
         } else {
-            response = "Failed to remove directory '" + directory + "'.";
+            response = "550 Failed to remove directory '" + directory + "'.";
         }
     }
     sendResponse(controlClientSocket, response);
@@ -80,13 +80,13 @@ void handleRMDCommand(int controlClientSocket, const std::string& args) {
 void handleDELECommand(int controlClientSocket, const std::string& args) {
     std::string response;
     if (args.empty()) {
-        response = "Missing file name.";
+        response = "501 Missing filename argument.";
     } else {
         std::string filename = args;
         if (deleteFile(filename)) {
-            response = "File '" + filename + "' deleted.";
+            response = "250 File '" + filename + "' deleted.";
         } else {
-            response = "Failed to delete file '" + filename + "'.";
+            response = "550 Failed to delete file '" + filename + "'.";
         }
     }
     sendResponse(controlClientSocket, response);
@@ -123,7 +123,7 @@ void handleLISTCommand(int controlClientSocket, const std::string& args) {
 void handleRETRCommand(int controlClientSocket, const std::string& args) {
     std::string response;
     if (args.empty()) {
-        response = "Missing filename argument.";
+        response = "501 Missing filename argument.";
     } else {
         std::string filename = args;
         if (fileExists(filename)) {
@@ -154,7 +154,7 @@ void handleRETRCommand(int controlClientSocket, const std::string& args) {
 void handleSTORCommand(int controlClientSocket, const std::string& args) {
     std::string response;
     if (args.empty()) {
-        response = "Missing filename argument.";
+        response = "501 Missing filename argument.";
     } else {
         std::string filename = args;
         sendResponse(controlClientSocket, "150 Opening data connection.\r\n");
@@ -180,7 +180,7 @@ void handleSTORCommand(int controlClientSocket, const std::string& args) {
 std::string handleUSERCommand(int controlClientSocket, const std::string& args) {
     std::string response;
     if (args.empty()) {
-        response = "Missing username argument.";
+        response = "501 Missing username argument.";
     } else {
         std::string username = args;
         if (username == "admin") {
@@ -188,7 +188,7 @@ std::string handleUSERCommand(int controlClientSocket, const std::string& args) 
             sendResponse(controlClientSocket, response);
             return username;
         } 
-        response = "530 Not logged in.";
+        response = "403 Invalid username.";
     }
     sendResponse(controlClientSocket, response);
     return ""; // Return empty string if username is not validd
@@ -197,7 +197,7 @@ std::string handleUSERCommand(int controlClientSocket, const std::string& args) 
 bool handlePASSCommand(int controlClientSocket, const std::string& args, const std::string& username) {
     std::string response;
     if (args.empty()) {
-        response = "Missing password argument.";
+        response = "501 Missing password argument.";
     } else {
         std::string password = args;
         if (password == "password") {
@@ -205,7 +205,7 @@ bool handlePASSCommand(int controlClientSocket, const std::string& args, const s
             sendResponse(controlClientSocket, response);
             return true; // Password is correct
         } 
-        response = "530 Login incorrect.";
+        response = "403 Login incorrect.";
     }
     sendResponse(controlClientSocket, response);
     return false; // Password is incorrect

@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
+<svg viewBox="0 0 728 378" xmlns="http://www.w3.org/2000/svg" xmlns:inkspace="http://www.inkscape.org/namespaces/inkscape" xmlns:xlink="http://www.w3.org/1999/xlink" width="728px" height="378px">
+  <defs id="defs_block">
+    <filter height="1.504" id="filter_blur" inkspace:collect="always" width="1.1575" x="-0.07875" y="-0.252">
+      <feGaussianBlur id="feGaussianBlur3780" inkspace:collect="always" stdDeviation="4.2" />
+    </filter>
+  </defs>
+  <title>blockdiag</title>
+  <desc>{
+  default_fontsize = 16
+  node_height = 45
+  node_width = 100
+  default_node_color = none
+  activation = none;
+  edge_length = 500;
+  default_note_color = white;
+  Server [label="Server", fontsize=20]
+  Client [label="Client", fontsize=20]
+  Server &lt;- Client [label="request"];
+  === Ejecución de request ===
+  Server -&gt; Client [label="reply"]
+}</desc>
+  <path d="M 114 85 L 114 366" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
+  <path d="M 614 85 L 614 366" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
+  <rect fill="none" height="45" stroke="rgb(0,0,0)" width="100" x="64" y="40" />
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="20" font-style="normal" font-weight="normal" text-anchor="middle" textLength="69" x="114.5" y="72">Server</text>
+  <rect fill="none" height="45" stroke="rgb(0,0,0)" width="100" x="564" y="40" />
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="20" font-style="normal" font-weight="normal" text-anchor="middle" textLength="60" x="614.0" y="72">Client</text>
+  <path d="M 122 147 L 606 147" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="130,143 122,147 130,151" stroke="rgb(0,0,0)" />
+  <path d="M 122 304 L 606 304" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="598,300 606,304 598,308" stroke="rgb(0,0,0)" />
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="16" font-style="normal" font-weight="normal" text-anchor="middle" textLength="61" x="571.5" y="143">request</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="16" font-style="normal" font-weight="normal" text-anchor="middle" textLength="41" x="150.5" y="300">reply</text>
+  <path d="M 40 217 L 269 217" fill="none" stroke="rgb(0,0,0)" />
+  <path d="M 40 221 L 269 221" fill="none" stroke="rgb(0,0,0)" />
+  <path d="M 458 217 L 688 217" fill="none" stroke="rgb(0,0,0)" />
+  <path d="M 458 221 L 688 221" fill="none" stroke="rgb(0,0,0)" />
+  <rect fill="rgb(208,208,208)" height="26" stroke="rgb(0,0,0)" width="189" x="269" y="206" />
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="16" font-style="normal" font-weight="normal" text-anchor="middle" textLength="169" x="363.5" y="228">Ejecución de request</text>
+</svg>
