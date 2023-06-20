@@ -25,7 +25,6 @@ void sendFile(int controlSocket, const std::string& filename) {
 
     int dataSocket = establishDataConnection(controlSocket);
 
-    // Open the file for reading in binary mode
     std::ifstream file(filename, std::ios::binary);
     if (!file) {
         std::cerr << "Failed to open file: " << filename << std::endl;
@@ -33,13 +32,10 @@ void sendFile(int controlSocket, const std::string& filename) {
         return;
     }
 
-    // Read the file contents into a buffer
-    // Read the file contents into a buffer
     std::vector<char> buffer(std::istreambuf_iterator<char>(file), {});
 
     file.close();
 
-    // Send the file contents to the client
     ssize_t bytesSent = send(dataSocket, buffer.data(), buffer.size(), 0);
     if (bytesSent == -1) {
         std::cerr << "Failed to send file contents." << std::endl;
@@ -53,7 +49,7 @@ void sendFile(int controlSocket, const std::string& filename) {
 
     std::cout << "Closing Data Socket" << std::endl;
     closeSocket(dataSocket);
-    // Wait for the server's response
+    
     receiveResponse(controlSocket, response);
 }
 
