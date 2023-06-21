@@ -109,7 +109,7 @@ void handleLISTCommand(int controlClientSocket, const std::string& args) {
             if (bytesSent == -1) {
                 response = "426 Connection closed; transfer aborted.";
             } else {
-                response = "226 Closing data connection, sent " + std::to_string(bytesSent) + " bytes.";
+                response = "226 Closing data connection.";
             }
         } else {
             response = "550 Failed to list directory.";

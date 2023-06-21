@@ -30,7 +30,7 @@ void handleClientConnection(int controlClientSocket) {
         // Split command into command proper and arguments
         std::vector<std::string> commandParts = splitCommand(command);
         if (commandParts.empty()) {
-            response = "Invalid command.";
+            response = "501 Invalid command.";
         } else {
             std::string cmd = commandParts[0];
             std::string args;
@@ -47,8 +47,7 @@ void handleClientConnection(int controlClientSocket) {
                     std::cout << "Username: " << username << std::endl;
                 } else if (cmd == "PASS") {
                     if (username == "") {
-                        sendResponse(controlClientSocket, "Enter valid username first");
-                        std::cout << "Username required" << std::endl;
+                        sendResponse(controlClientSocket, "530 Enter username.");
                     } else {
                         authenticated = handlePASSCommand(controlClientSocket, args, username);
                         std::cout << "Authentication status: " << authenticated << std::endl;
@@ -56,8 +55,7 @@ void handleClientConnection(int controlClientSocket) {
                 } else if (cmd == "QUIT") {
                     break;
                 } else {
-                    sendResponse(controlClientSocket, "Not signed in.");
-                    std::cout << "Not signed in" << std::endl;
+                    sendResponse(controlClientSocket, "530 Not signed in.");
                 }
             } else {
                 if (cmd == "LIST") {
@@ -79,7 +77,7 @@ void handleClientConnection(int controlClientSocket) {
                 } else if (cmd == "QUIT") {
                     break;
                 } else {
-                    sendResponse(controlClientSocket, "Unsupported command.");
+                    sendResponse(controlClientSocket, "502 Unsupported command.");
                 }
             }
         }

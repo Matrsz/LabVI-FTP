@@ -30,13 +30,11 @@ int main() {
             // Extract the filename from the command
             sendCommand(controlSocket, command);
             std::string filename = command.substr(5);
-            std::cout << "Will receive file: " << filename << std::endl;
             receiveFile(controlSocket, filename);
         } else if (command.substr(0, 4) == "STOR") {
             // Extract the filename from the command
             std::string filename = command.substr(5);
             if (fileExists(filename)) {
-                std::cout << "Will send file: " << filename << std::endl;
                 sendCommand(controlSocket, command);
                 sendFile(controlSocket, filename);
             }

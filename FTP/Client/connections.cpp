@@ -28,7 +28,6 @@ void closeSocket(int socket) {
 
 void sendCommand(int socket, const std::string& command) {
     send(socket, command.c_str(), command.size(), 0);
-    std::cout << "Sent Command: " << command << std::endl;
     return;
 }
 
@@ -106,7 +105,6 @@ int establishDataConnection(int controlSocket) {
     char buffer[1024];
     memset(buffer, 0, sizeof(buffer));
     recv(controlSocket, buffer, sizeof(buffer), 0);
-    std::cout << "Received: " << buffer;
 
     // Parse the server's IP address and port
     std::string response(buffer);

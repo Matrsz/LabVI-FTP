@@ -43,13 +43,7 @@ void sendFile(int controlSocket, const std::string& filename) {
         return;
     }
     
-    std::cout << "File contents sent: " << bytesSent << " bytes" << std::endl;
-
-    std::cout << "File sent successfully: " << filename << std::endl;
-
-    std::cout << "Closing Data Socket" << std::endl;
     closeSocket(dataSocket);
-    
     receiveResponse(controlSocket, response);
 }
 
@@ -75,7 +69,6 @@ void receiveFile(int controlSocket, const std::string& filename) {
     std::ofstream file(filename, std::ios::binary);
     if (!file) {
         std::cerr << "Failed to create file: " << filename << std::endl;
-        std::cout << "Closing Data Socket" << std::endl;
         closeSocket(dataSocket);
         return;
     }
@@ -94,12 +87,7 @@ void receiveFile(int controlSocket, const std::string& filename) {
     }
 
     file.close();
-
-    std::cout << "File received successfully: " << filename << std::endl;
-
     receiveResponse(controlSocket, response);
-
-    std::cout << "Closing Data Socket" << std::endl;
     closeSocket(dataSocket);
 }
 
@@ -133,7 +121,6 @@ void receiveList(int controlSocket) {
 
     receiveResponse(controlSocket, response);
     
-    std::cout << "Closing Data Socket" << std::endl;
     closeSocket(dataSocket);
     return;
 }
