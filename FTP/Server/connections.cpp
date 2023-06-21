@@ -68,7 +68,6 @@ int acceptClientConnection(int socket) {
     socklen_t clientAddressLength = sizeof(clientAddress);
     int clientSocket = accept(socket, (struct sockaddr*)&clientAddress, &clientAddressLength);
     if (clientSocket == -1) {
-        std::cerr << "Failed to accept client connection." << std::endl;
         close(socket);
         return -1;
     }

@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="224">
+  <style>
+    line, path, circle, rect, polygon{stroke:black;stroke-width:2;stroke-opacity:1;fill-opacity:1;stroke-linecap:round;stroke-linejoin:miter;}text{font-family:Iosevka Fixed, monospace;font-size:14px;}rect.backdrop{stroke:none;fill:white;}.broken{stroke-dasharray:8;}.filled{fill:black;}.bg_filled{fill:white;}.nofill{fill:white;}.end_marked_arrow{marker-end:url(#arrow);}.start_marked_arrow{marker-start:url(#arrow);}.end_marked_diamond{marker-end:url(#diamond);}.start_marked_diamond{marker-start:url(#diamond);}.end_marked_circle{marker-end:url(#circle);}.start_marked_circle{marker-start:url(#circle);}.end_marked_open_circle{marker-end:url(#open_circle);}.start_marked_open_circle{marker-start:url(#open_circle);}.end_marked_big_open_circle{marker-end:url(#big_open_circle);}.start_marked_big_open_circle{marker-start:url(#big_open_circle);}
+    <!--separator-->
+    
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="-2 -2 8 8" refX="4" refY="2" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <polygon points="0,0 0,4 4,2 0,0"></polygon>
+    </marker>
+    <marker id="diamond" viewBox="-2 -2 8 8" refX="4" refY="2" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <polygon points="0,2 2,0 4,2 2,4 0,2"></polygon>
+    </marker>
+    <marker id="circle" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <circle cx="4" cy="4" r="2" class="filled"></circle>
+    </marker>
+    <marker id="open_circle" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <circle cx="4" cy="4" r="2" class="bg_filled"></circle>
+    </marker>
+    <marker id="big_open_circle" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <circle cx="4" cy="4" r="3" class="bg_filled"></circle>
+    </marker>
+  </defs>
+  <rect class="backdrop" x="0" y="0" width="256" height="224"></rect>
+  <rect x="180" y="8" width="64" height="64" class="solid nofill" rx="0"></rect>
+  <text x="186" y="44" >Client</text>
+  <rect x="4" y="72" width="64" height="64" class="solid nofill" rx="0"></rect>
+  <text x="10" y="108" >Server</text>
+  <rect x="180" y="136" width="64" height="64" class="solid nofill" rx="0"></rect>
+  <text x="186" y="172" >Client</text>
+  <g>
+    <line x1="124" y1="40" x2="160" y2="40" class="solid"></line>
+    <line x1="124" y1="40" x2="100" y2="88" class="solid"></line>
+    <polygon points="160,36 168,40 160,44" class="filled"></polygon>
+    <polygon points="88,84 80,88 88,92" class="filled"></polygon>
+    <line x1="88" y1="88" x2="100" y2="88" class="solid"></line>
+  </g>
+  <g>
+    <polygon points="88,116 80,120 88,124" class="filled"></polygon>
+    <line x1="88" y1="120" x2="100" y2="120" class="solid"></line>
+    <line x1="100" y1="120" x2="124" y2="168" class="solid"></line>
+    <line x1="124" y1="168" x2="160" y2="168" class="solid"></line>
+    <polygon points="160,164 168,168 160,172" class="filled"></polygon>
+  </g>
+</svg>

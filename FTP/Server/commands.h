@@ -4,7 +4,7 @@
 #include <cstring>
 #include <sstream>
 #include <dirent.h>
-#include "filesystem.h"
+#include "files.h"
 #include "connections.h"
 
 void sendResponse(int socket, const std::string& response);

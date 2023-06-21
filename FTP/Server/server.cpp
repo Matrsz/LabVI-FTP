@@ -3,7 +3,7 @@
 #include <poll.h>
 
 #include "connections.h"
-#include "filesystem.h"
+#include "files.h"
 #include "commands.h"
 
 void handleClientConnection(int controlClientSocket) {
@@ -53,6 +53,8 @@ void handleClientConnection(int controlClientSocket) {
                         authenticated = handlePASSCommand(controlClientSocket, args, username);
                         std::cout << "Authentication status: " << authenticated << std::endl;
                     }
+                } else if (cmd == "QUIT") {
+                    break;
                 } else {
                     sendResponse(controlClientSocket, "Not signed in.");
                     std::cout << "Not signed in" << std::endl;
@@ -108,23 +110,19 @@ int main() {
             std::cerr << "Error occurred during poll()." << std::endl;
             break;
         }
-
         // Check if there is a new connection request on the control socket
         if (pollFds[0].revents & POLLIN) {
             pid_t pid = fork();
-
             if (pid < 0) {
                 std::cerr << "Failed to fork a new process." << std::endl;
                 return 1;
             } else if (pid == 0) {
                 // Child process
-                std::cout << "Child process started" << std::endl;
                 // Accept a client connection
                 int controlClientSocket = acceptClientConnection(controlSocket);
                 if (controlClientSocket == -1) {
                     return 1;
                 }
-
                 std::cout << "Client connected." << std::endl;
                 closeSocket(controlSocket); // Close the control socket in the child process
                 handleClientConnection(controlClientSocket);

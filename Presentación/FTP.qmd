@@ -42,7 +42,126 @@ Diagram(:svgbob, """
 - Puerto `2021`: Command channel, permanece abierto mientras la sesión esté activa
 - Puerto `2022`: Data channel, abierto únicamente en respuesta a comandos que lo requieran
 
-## Cliente $\rightarrow$ Servidor
+## Funciones Socket 
+
+Creación de socket para Command y Data channels
+
+```cpp
+int createSocket(int port) {
+    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    int reuseAddr = 1;
+    setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &reuseAddr, sizeof(reuseAddr))
+    sockaddr_in serverAddress{};
+    serverAddress.sin_family = AF_INET;
+    serverAddress.sin_port = htons(port);
+    serverAddress.sin_addr.s_addr = INADDR_ANY;
+    bind(sockfd, (struct sockaddr*)&serverAddress, sizeof(serverAddress))
+    listen(sockfd, 1)
+    return sockfd;
+}
+``` 
+
+`SO_REUSEADDR=1` permite cerrar y volver a abrir el Data channel según sea requerido
+
+## Funciones Socket
+
+Command Channel:
+```cpp
+int acceptClientConnection(int controlSocket) {
+    sockaddr_in clientAddress{};
+    socklen_t clientAddressLength = sizeof(clientAddress);
+    int clientSocket = accept(controlSocket,
+                (struct sockaddr*)&clientAddress, &clientAddressLength);
+    return clientSocket;
+}
+```
+Data Channel:
+```cpp
+int establishDataConnection(int controlClientSocket, int dataSocket,
+                           std::string &dataAddress, int dataPort){
+    std::string dataMessage = "PORT "+dataAddress+":"+dataPort+"\r\n";
+    send(controlClientSocket, dataMessage.c_str(), dataMessage.size(), 0);
+    int dataClientSocket = acceptClientConnection(dataSocket);
+    return dataClientSocket;
+}
+```
+
+## Múltiples Clientes
+
+```{julia}
+#| echo: false
+#| output: false
+
+using Kroki 
+using Base: Fix1, Fix2
+
+Diagram(:svgbob, """
+                      +-------+
+                      |       |   
+               +----> |Client |
+              /       |       |
++-------+    /        +-------+ 
+|       | <-+          
+|Server | 
+|       | <-+          
++-------+    \\        +-------+ 
+              \\       |       |
+               +----> |Client |
+                      |       |
+                      +-------+
+""") |> Fix2(render, "svg") |> Fix1(write, "Images/fig2.svg")
+```
+El servidor debe ser capaz de atender a múltiples clientes.
+
+![](Images/fig2.svg){fig-align="center" width="60%"}
+
+- La conexión Cliente $\leftrightarrow$ Servidor debe ser no-bloqueante. 
+- Esto se logra con un _fork_ al recibir conexión entrante.
+
+
+## Múltiples Clientes - Main
+```cpp
+int controlSocket = createSocket(2021);
+std::vector<pollfd> pollFds(1);
+pollFds[0].fd = controlSocket; pollFds[0].events = POLLIN;
+while (true) {
+    int pollResult = poll(pollFds.data(), pollFds.size(), -1);
+    if (pollFds[0].revents & POLLIN) {
+        pid_t pid = fork();
+        if (pid == 0) {
+            int controlClientSocket = acceptClientConnection(controlSocket);
+            closeSocket(controlSocket);
+            handleClientConnection(controlClientSocket);
+            return 0;
+        }
+    }
+}
+closeSocket(controlSocket);
+```
+
+## Loop de Respuestas
+
+```cpp
+void handleClientConnection(int controlClientSocket) {
+    sendWelcomeMessage(controlClientSocket);
+    bool authenticated = false;
+    char commandBuffer[1024];
+    while (true) {
+        memset(commandBuffer, 0, sizeof(commandBuffer));
+        ssize_t bytesRead = recv(controlClientSocket, commandBuffer, 
+                                 sizeof(commandBuffer), 0);
+        std::vector<std::string> commandParts = splitCommand(commandBuffer);
+        if (!authenticated) {
+            // Rechazo de comandos excepto USER PASS o QUIT + respuesta
+        } else {
+            // Aceptación de otros comandos + respuesta
+        }
+    } 
+    closeSocket(controlClientSocket);
+}
+```
+
+## Comandos Implementados
 
 :::: {.columns}
 
@@ -73,13 +192,13 @@ Comandos que usan ambos Command y Data channel:
 - `RETR <file>`
 - `STOR <file>`
 
-
 :::
 
 ::::
 
-## Loop general
+La distinción principal en la implementación de los diferentes comandos depende de si estos usan o no el Data channel.
 
+## Ejecución general de comandos
 
 ```{julia}
 #| echo: false
@@ -101,8 +220,13 @@ Diagram(:seqdiag, """
   Server -> Client [label="reply"]
 }""") |> Fix2(render, "svg") |> Fix1(write, "Images/general.svg")
 ```
+- Cliente inicia request envíando un código FTP por el Command channel
+\vspace{-1em}
 
-![](Images/general.svg){fig-align="center"}
+![](Images/general.svg){fig-align="center" width="85%"}
+
+- Servidor eventualmente responde envíando un código de respuesta FTP por el command channel
+- Ejecución de request puede incluír intercambio de más mensajes y/o uso del Data channel. 
 
 ## Comando RETR \<file\>
 
@@ -131,7 +255,7 @@ Diagram(:seqdiag, """
 
 ![](Images/retr.svg){fig-align="center"}
 
-## Server side
+## RETR - Server side
 
 ```cpp
 void handleRETRCommand(int controlClientSocket, const std::string& args) {
@@ -151,7 +275,7 @@ void handleRETRCommand(int controlClientSocket, const std::string& args) {
 }
 ```
 
-## Server side
+## RETR - Server side
 
 ```cpp
 bool sendFile(int socket, const std::string& filename) {
@@ -171,15 +295,14 @@ bool sendFile(int socket, const std::string& filename) {
 }
 ```
 
-## Client side
+## RETR - Client side
 
 ```cpp
-void receiveFile(int controlSocket, const std::string& filename) {
+void recvFile(int controlSocket, const std::string& filename) {
     std::string response;
     receiveResponse(controlSocket, response);
-    if (response.substr(0, 3) != "150") {
+    if (response.substr(0, 3) != "150")
         return;
-    }
     int dataSocket = establishDataConnection(controlSocket);
     const int bufferSize = 1024;
     std::vector<char> buffer(bufferSize);
@@ -221,7 +344,7 @@ Diagram(:seqdiag, """
 
 ![](Images/stor.svg){fig-align="center"}
 
-## Server side
+## STOR - Server side
 
 ```cpp
 void handleSTORCommand(int controlClientSocket, const std::string& args) {
@@ -241,7 +364,7 @@ void handleSTORCommand(int controlClientSocket, const std::string& args) {
 }
 ```
 
-## Server side
+## STOR - Server side
 
 ```cpp
 bool recvFile(int dataSocket, const std::string& filename) {
@@ -262,7 +385,7 @@ bool recvFile(int dataSocket, const std::string& filename) {
 }
 ```
 
-## Client Side
+## STOR - Client Side
 
 ```cpp
 void sendFile(int controlSocket, const std::string& filename) {
@@ -282,14 +405,4 @@ void sendFile(int controlSocket, const std::string& filename) {
 }
 ```
 
-## Loop Básico
-
-```cpp
-while(true) {
-    if (authenticated) {
-        // Selección de comandos RETR, STOR, etc..
-    } else {
-        // Selección de comandos USER, PASS, o rechazo
-    }
-}
-```
+### Demostración

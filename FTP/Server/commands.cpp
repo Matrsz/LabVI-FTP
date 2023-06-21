@@ -4,7 +4,7 @@
 #include <cstring>
 #include <sstream>
 #include <dirent.h>
-#include "filesystem.h"
+#include "files.h"
 #include "connections.h"
 
 std::vector<std::string> splitCommand(const std::string& command) {

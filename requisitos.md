@@ -8,7 +8,7 @@
 - PASS
 - QUIT
 
-### Comandos de Filesystem
+### Comandos de files
 
 - PWD: present working directory
 - LIST: enlista los contenidos del PWD
@@ -48,4 +48,4 @@
 
 ## Cliente
 
-- Acceso a su propio filesystem
+- Acceso a su propio files
